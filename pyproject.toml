@@ -7,7 +7,18 @@ authors = [
     { name = "vasant", email = "vasant.tholappa@gmail.com" }
 ]
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "earthengine-api>=1.7.40",
+    "geopandas>=1.1.4",
+    "ipykernel>=7.3.0",
+    "jupyter>=1.1.1",
+    "matplotlib>=3.11.1",
+    "numpy>=2.5.2",
+    "pandas>=3.0.5",
+    "pyproj>=3.7.2",
+    "rasterio>=1.5.1",
+    "shapely>=2.1.2",
+]
 
 [project.scripts]
 wildfire-recovery-forecasting = "wildfire_recovery_forecasting:main"

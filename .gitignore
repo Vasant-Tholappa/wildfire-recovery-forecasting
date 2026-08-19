@@ -8,3 +8,9 @@ wheels/
 
 # Virtual environments
 .venv
+
+# Project-generated files
+data/
+outputs/
+.ipynb_checkpoints/
+.env

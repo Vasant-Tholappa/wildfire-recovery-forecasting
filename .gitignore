@@ -11,6 +11,12 @@ wheels/
 
 # Project-generated files
 data/
-outputs/
+
+# Ignore generated outputs by default,
+# but track curated figures for documentation/README use
+outputs/*
+!outputs/figures/
+!outputs/figures/**
+
 .ipynb_checkpoints/
 .env

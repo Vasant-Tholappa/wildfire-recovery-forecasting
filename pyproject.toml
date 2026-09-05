@@ -1,7 +1,7 @@
 [project]
 name = "wildfire-recovery-forecasting"
 version = "0.1.0"
-description = "Add your description here"
+description = "Predicting fifth-season post-fire Landsat NBR across the Western U.S."
 readme = "README.md"
 authors = [
     { name = "vasant", email = "vasant.tholappa@gmail.com" }

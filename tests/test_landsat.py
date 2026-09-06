@@ -5,9 +5,59 @@ import unittest
 from unittest.mock import patch
 
 import ee
+import numpy as np
 from ee.apitestcase import ApiTestCase
 
 from wildfire_recovery_forecasting import landsat
+
+
+class PixelImage:
+    """Small masked pixel arrays for exercising orchestration without EE."""
+
+    def __init__(self, values):
+        self.values = np.ma.array(values)
+
+    def rename(self, name):
+        return self
+
+    def setDefaultProjection(self, projection):
+        return self
+
+    def clip(self, geometry):
+        return self
+
+    def _binary(self, other, operation):
+        return PixelImage(operation(self.values, other.values if isinstance(other, PixelImage) else other))
+
+    def gte(self, other):
+        return self._binary(other, np.greater_equal)
+
+    def lt(self, other):
+        return self._binary(other, np.less)
+
+    def eq(self, other):
+        return self._binary(other, np.equal)
+
+    def And(self, other):
+        return self._binary(other, np.logical_and)
+
+    def add(self, other):
+        return self._binary(other, np.add)
+
+    def subtract(self, other):
+        return self._binary(other, np.subtract)
+
+    def mask(self):
+        return PixelImage(~np.ma.getmaskarray(self.values))
+
+    def unmask(self, value, sameFootprint=False):
+        return PixelImage(self.values.filled(value))
+
+    def updateMask(self, mask):
+        return PixelImage(np.ma.array(
+            self.values.data,
+            mask=np.ma.getmaskarray(self.values) | ~np.asarray(mask.values.filled(0), dtype=bool),
+        ))
 
 
 def graph_calls(value):
@@ -127,6 +177,83 @@ class LandsatTests(ApiTestCase):
         self.assertNotIn("ImageCollection.merge", [name for name, _ in graph_calls(result["date_count"])])
         with self.assertRaises(ValueError):
             landsat.build_seasonal_nbr(2018, ee.Geometry.Point([0, 0]), reference_projection=None)
+
+
+class FireNBRTests(ApiTestCase):
+    def setUp(self):
+        super().setUp()
+        self.fire = dict(prefire_search_start_year=2012, prefire_search_end_year=2016,
+                         season1_year=2018, season5_year=2022)
+
+    def test_latest_three_selection_and_missing_pixels_numerically(self):
+        # Columns are independent pixels: all usable, recent unusable,
+        # only two usable, missing annual NBR despite count, no usable years.
+        counts = {
+            2016: [3, 2, 3, 3, 0], 2015: [3, 3, 0, 3, 0],
+            2014: [3, 3, 2, 3, 0], 2013: [3, 3, 3, 3, 0],
+            2012: [3, 3, 0, 3, 0],
+        }
+        values = {2016: -0.7, 2015: 0.8, 2014: 0.4, 2013: 0.9, 2012: 0.6}
+
+        def season(year, geometry, reference_projection):
+            if year in counts:
+                nbr = np.ma.array([values[year]] * 5, mask=[False, False, False, year == 2015, False])
+                return {"nbr": PixelImage(nbr), "obs_count": PixelImage(counts[year])}
+            # A single date remains allowed for Season 1/5 in this substep.
+            return {"nbr": PixelImage([0.2 if year == 2018 else 0.9] * 5),
+                    "obs_count": PixelImage([1] * 5)}
+
+        with patch.object(landsat, "build_seasonal_nbr", side_effect=season) as seasonal, \
+             patch.object(landsat, "ee") as api:
+            api.Image.constant.side_effect = PixelImage
+            api.ImageCollection.fromImages.return_value.median.side_effect = lambda: PixelImage(
+                np.ma.median(np.ma.stack([
+                    image.values for image in api.ImageCollection.fromImages.call_args.args[0]
+                ]), axis=0)
+            )
+            result = landsat.build_fire_nbr(self.fire, "geometry", reference_projection=api.Projection())
+            self.assertEqual([call.args[0] for call in seasonal.call_args_list],
+                             [2016, 2015, 2014, 2013, 2012, 2018, 2022])
+            np.testing.assert_allclose(result["nbr_pre"].values.compressed(), [0.4, 0.8, 0.4])
+            np.testing.assert_array_equal(np.ma.getmaskarray(result["nbr_pre"].values), [0, 0, 1, 0, 1])
+            np.testing.assert_array_equal(result["prefire_selected_year_count"].values, [3, 3, 2, 3, 0])
+            np.testing.assert_array_equal(result["nbr_pre_valid"].values, [1, 1, 0, 1, 0])
+            np.testing.assert_allclose(result["nbr_drop"].values.compressed(), [0.2, 0.6, 0.2])
+            np.testing.assert_array_equal(np.ma.getmaskarray(result["nbr_drop"].values), [0, 0, 1, 0, 1])
+            for key in ["nbr_1", "nbr_5"]:
+                self.assertFalse(np.ma.getmaskarray(result[key].values).any())
+            for key in ["season1_obs_count", "season5_obs_count"]:
+                np.testing.assert_array_equal(result[key].values, [1] * 5)
+
+    def test_manifest_years_projection_and_offline_graph(self):
+        self.fire.update(prefire_search_start_year=2008, prefire_search_end_year=2012,
+                         season1_year=2014, season5_year=2018)
+        projection = ee.Projection("EPSG:32611")
+        geometry = ee.Geometry.Point([-115, 45])
+        with patch.object(landsat, "build_seasonal_nbr") as seasonal, \
+             patch.object(ee.data, "computeValue", side_effect=AssertionError("Network evaluation")):
+            seasonal.return_value = {"nbr": ee.Image(0.5).rename("NBR"),
+                                     "obs_count": ee.Image(3).rename("valid_obs_count")}
+            result = landsat.build_fire_nbr(self.fire, geometry, reference_projection=projection)
+            self.assertEqual([call.args[0] for call in seasonal.call_args_list],
+                             [2012, 2011, 2010, 2009, 2008, 2014, 2018])
+            for call in seasonal.call_args_list:
+                self.assertEqual(call.args[1], geometry)
+                self.assertEqual(call.kwargs, {"reference_projection": projection})
+            calls = graph_calls(result["nbr_pre"])
+            self.assertNotIn("Image.reproject", [name for name, _ in calls])
+            self.assertIn(("Projection.atScale", {"projection": ("Projection", {"crs": "EPSG:32611"}), "meters": 30}), calls)
+            for image in result.values():
+                self.assertIsInstance(image, ee.Image)
+                image.serialize()
+
+    def test_invalid_manifest_pool_is_rejected_before_seasonal_calls(self):
+        for change in [dict(prefire_search_start_year=2011), dict(prefire_search_end_year=2015),
+                       dict(season1_year=None), dict(season5_year=2022.5)]:
+            with self.subTest(change=change), patch.object(landsat, "build_seasonal_nbr") as seasonal:
+                with self.assertRaises(ValueError):
+                    landsat.build_fire_nbr(self.fire | change, None, reference_projection=ee.Projection("EPSG:32611"))
+                seasonal.assert_not_called()
 
 
 if __name__ == "__main__":

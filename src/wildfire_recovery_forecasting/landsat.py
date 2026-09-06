@@ -1,12 +1,16 @@
 """Landsat seasonal NBR predictors, targets, and coverage QA."""
 
 from datetime import date, timedelta
+from numbers import Integral
 
 import ee
 
 from wildfire_recovery_forecasting.config import (
     GROWING_SEASON_END_MONTH_DAY,
     GROWING_SEASON_START_MONTH_DAY,
+    LANDSAT_MIN_VALID_ACQUISITION_DATES,
+    NBR_PRE_REQUIRED_USABLE_SEASONS,
+    NBR_PRE_SEARCH_SEASONS,
 )
 
 
@@ -112,4 +116,69 @@ def build_seasonal_nbr(
         "obs_count": count,
         "scene_count": scenes.size(),
         "date_count": daily.size(),
+    }
+
+
+def build_fire_nbr(
+    fire, geometry: ee.Geometry, *, reference_projection: ee.Projection,
+) -> dict[str, ee.Image]:
+    """Build one fire's NBR products from a local manifest row or mapping.
+
+    Read the four manifest year fields directly; do not derive ignition timing.
+    The caller supplies the EE geometry and explicit reference projection, as
+    for build_seasonal_nbr. Outputs are lazy images, not materialized assets.
+
+    QA: nbr_pre_valid is 0/1 support; prefire_selected_year_count is 0-3,
+    retaining incomplete selections where NBR_pre is masked (not the total
+    usable count across all five years). Season 1/5 counts are valid unique
+    dates without additional thresholds. QA is supported within geometry.
+    Each output band's name matches its dictionary key except the four
+    spectral products, whose bands are NBR_pre, NBR_1, NBR_5, and NBR_drop.
+    """
+    fields = (
+        "prefire_search_start_year", "prefire_search_end_year",
+        "season1_year", "season5_year",
+    )
+    for field in fields:
+        if field not in fire or isinstance(fire[field], bool) or not isinstance(fire[field], Integral):
+            raise ValueError(f"Manifest requires an integer {field}")
+    start, end = int(fire[fields[0]]), int(fire[fields[1]])
+    if end - start + 1 != NBR_PRE_SEARCH_SEASONS:
+        raise ValueError("Manifest prefire search pool must contain five consecutive years")
+    if reference_projection is None:
+        raise ValueError("An explicit reference_projection is required")
+    projection = reference_projection.atScale(30)
+    selected_count = (
+        ee.Image.constant(0).rename("prefire_selected_year_count")
+        .setDefaultProjection(projection).clip(geometry)
+    )
+    selected_seasons = []
+    for year in range(end, start - 1, -1):
+        season = build_seasonal_nbr(year, geometry, reference_projection=reference_projection)
+        # Unmask QA only. A missing annual NBR must never be counted as usable.
+        usable = (
+            season["obs_count"].gte(LANDSAT_MIN_VALID_ACQUISITION_DATES)
+            .And(season["nbr"].mask()).unmask(0, sameFootprint=False)
+        )
+        take = selected_count.lt(NBR_PRE_REQUIRED_USABLE_SEASONS).And(usable)
+        selected_seasons.append(season["nbr"].updateMask(take))
+        selected_count = selected_count.add(take)
+
+    valid = selected_count.eq(NBR_PRE_REQUIRED_USABLE_SEASONS).rename("nbr_pre_valid")
+    nbr_pre = (
+        ee.ImageCollection.fromImages(selected_seasons).median()
+        .updateMask(valid).rename("NBR_pre").setDefaultProjection(projection)
+    )
+    season1 = build_seasonal_nbr(int(fire["season1_year"]), geometry, reference_projection=reference_projection)
+    season5 = build_seasonal_nbr(int(fire["season5_year"]), geometry, reference_projection=reference_projection)
+    nbr1, nbr5 = season1["nbr"].rename("NBR_1"), season5["nbr"].rename("NBR_5")
+    return {
+        "nbr_pre": nbr_pre,
+        "nbr_1": nbr1,
+        "nbr_5": nbr5,
+        "nbr_drop": nbr_pre.subtract(nbr1).rename("NBR_drop"),
+        "nbr_pre_valid": valid,
+        "prefire_selected_year_count": selected_count,
+        "season1_obs_count": season1["obs_count"].rename("season1_obs_count"),
+        "season5_obs_count": season5["obs_count"].rename("season5_obs_count"),
     }

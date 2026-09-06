@@ -1,11 +1,14 @@
 """Focal-fire catalog and manifest construction."""
 
 from datetime import date, datetime, timezone
+from math import isclose, isfinite
 from numbers import Real
 
 import ee
 import geopandas as gpd
 import pandas as pd
+from shapely.geometry import GeometryCollection, MultiPolygon, Polygon
+from shapely.geometry.base import BaseGeometry
 
 from wildfire_recovery_forecasting.config import (
     GROWING_SEASON_END_MONTH_DAY,
@@ -58,6 +61,46 @@ def derive_fire_fields(ignition_date: date) -> dict[str, int | str]:
     }
 
 
+def normalize_fire_geometry(geometry: BaseGeometry) -> Polygon | MultiPolygon:
+    """Preserve MTBS polygon parts, excluding only zero-area collection members.
+
+    No repair, dissolve, simplification, or coordinate transformation occurs.
+    Area is checked in the unchanged input coordinate system with relative
+    tolerance 1e-12 and no absolute tolerance; it is not an acreage estimate.
+    """
+    if not isinstance(geometry, BaseGeometry) or geometry.is_empty:
+        raise ValueError("Every focal fire requires a nonempty perimeter geometry")
+    if not geometry.is_valid:
+        raise ValueError("Invalid MTBS perimeter geometry requires source review")
+    if isinstance(geometry, (Polygon, MultiPolygon)):
+        normalized = geometry
+    elif isinstance(geometry, GeometryCollection):
+        polygons = []
+        pending = list(reversed(geometry.geoms))
+        while pending:
+            part = pending.pop()
+            if isinstance(part, Polygon):
+                polygons.append(part)
+            elif isinstance(part, (MultiPolygon, GeometryCollection)):
+                pending.extend(reversed(part.geoms))
+            elif part.area != 0:
+                raise ValueError("Cannot discard a non-polygonal component with nonzero area")
+        if not polygons:
+            raise ValueError("MTBS GeometryCollection contains no polygonal components")
+        normalized = polygons[0] if len(polygons) == 1 else MultiPolygon(polygons)
+    else:
+        raise ValueError("Unsupported MTBS perimeter geometry type: " + geometry.geom_type)
+    if normalized.is_empty or not normalized.is_valid:
+        raise ValueError("Normalized MTBS perimeter must be nonempty and valid")
+    if not (
+        isfinite(geometry.area)
+        and isfinite(normalized.area)
+        and isclose(geometry.area, normalized.area, rel_tol=1e-12, abs_tol=0.0)
+    ):
+        raise ValueError("MTBS geometry normalization did not preserve area")
+    return normalized
+
+
 def manifest_from_mtbs(fires: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
     """Convert already region-filtered MTBS records to a manifest, locally.
 
@@ -83,10 +126,7 @@ def manifest_from_mtbs(fires: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
         raise ValueError("Duplicate MTBS Event_ID values require source review")
     if fires.geometry.isna().any() or fires.geometry.is_empty.any():
         raise ValueError("Every focal fire requires a nonempty perimeter geometry")
-    if not fires.geometry.geom_type.isin(["Polygon", "MultiPolygon"]).all():
-        raise ValueError("MTBS perimeters must be Polygon or MultiPolygon geometries")
-    if not fires.geometry.is_valid.all():
-        raise ValueError("Invalid MTBS perimeter geometry requires source review")
+    geometries = [normalize_fire_geometry(geometry) for geometry in fires.geometry]
 
     timestamps = fires["Ig_Date"]
     if timestamps.isna().any() or not timestamps.map(
@@ -107,7 +147,7 @@ def manifest_from_mtbs(fires: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
             "fire_size_acres": fires["BurnBndAc"].to_numpy(),
             "source_dataset": MTBS_SOURCE,
         },
-        geometry=fires.geometry.reset_index(drop=True),
+        geometry=geometries,
         crs=fires.crs,
     )
     for field in derived:

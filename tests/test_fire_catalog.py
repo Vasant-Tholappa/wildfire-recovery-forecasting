@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, patch
 
 import geopandas as gpd
 import pandas as pd
-from shapely.geometry import Polygon, box
+from shapely.geometry import GeometryCollection, LineString, MultiPolygon, Point, Polygon, box
 
 from wildfire_recovery_forecasting import fire_catalog as catalog
 
@@ -65,7 +65,56 @@ class FireDerivationTests(unittest.TestCase):
                 catalog.derive_fire_fields(value)
 
 
+class GeometryNormalizationTests(unittest.TestCase):
+    def test_polygon_and_multipolygon_unchanged(self):
+        for geometry in [box(0, 0, 10, 10), MultiPolygon([box(0, 0, 10, 10), box(20, 0, 21, 1)])]:
+            with self.subTest(geometry=geometry):
+                self.assertIs(catalog.normalize_fire_geometry(geometry), geometry)
+
+    def test_collection_preserves_holes_and_small_parts(self):
+        polygon = Polygon(box(0, 0, 10, 10).exterior.coords, [box(2, 2, 4, 4).exterior.coords])
+        tiny = box(20, 0, 20.00001, 0.00001)
+        line = LineString([(0, 0), (1, 1)])
+        for parts in [[polygon], [polygon, tiny]]:
+            with self.subTest(parts=len(parts)):
+                collection = GeometryCollection([line, *parts])
+                result = catalog.normalize_fire_geometry(collection)
+                self.assertEqual(result.geom_type, "Polygon" if len(parts) == 1 else "MultiPolygon")
+                actual_parts = [result] if isinstance(result, Polygon) else list(result.geoms)
+                self.assertEqual([part.wkb for part in actual_parts], [part.wkb for part in parts])
+                self.assertEqual(result.area, collection.area)
+                self.assertTrue(result.is_valid)
+
+    def test_nested_polygonal_components_are_retained(self):
+        parts = [box(0, 0, 1, 1), box(2, 0, 3, 1)]
+        collection = GeometryCollection([GeometryCollection([MultiPolygon(parts), Point(0, 0)])])
+        result = catalog.normalize_fire_geometry(collection)
+        self.assertEqual([part.wkb for part in result.geoms], [part.wkb for part in parts])
+        self.assertEqual(result.area, collection.area)
+
+    def test_no_polygons_invalid_and_unsupported_are_rejected(self):
+        line = LineString([(0, 0), (1, 1)])
+        invalid = Polygon([(0, 0), (1, 1), (1, 0), (0, 1)])
+        with self.assertRaisesRegex(ValueError, "no polygonal components"):
+            catalog.normalize_fire_geometry(GeometryCollection([line]))
+        for geometry in [None, Polygon(), line, Point(0, 0), invalid, GeometryCollection([invalid, line]),
+                         GeometryCollection([box(0, 0, 2, 2), box(1, 1, 3, 3)])]:
+            with self.subTest(geometry=geometry), self.assertRaises(ValueError):
+                catalog.normalize_fire_geometry(geometry)
+
+
 class ManifestTests(unittest.TestCase):
+    def test_manifest_normalizes_collection_without_changing_source(self):
+        source = mtbs_rows()
+        polygon = source.geometry.iloc[0]
+        collection = GeometryCollection([polygon, LineString([(-116, 45), (-115, 46)])])
+        source.at[0, "geometry"] = collection
+        manifest = catalog.manifest_from_mtbs(source).set_index("fire_id")
+        self.assertEqual(len(manifest), len(source))
+        self.assertEqual(manifest.loc["ID_TEST_2017"].geometry.wkb, polygon.wkb)
+        self.assertEqual(source.geometry.iloc[0].wkb, collection.wkb)
+        self.assertEqual(manifest.crs, source.crs)
+
     def test_manifest_preserves_dates_geometry_and_metadata(self):
         source = mtbs_rows()
         source.index = [5, 5]

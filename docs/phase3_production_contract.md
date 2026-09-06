@@ -2,9 +2,11 @@
 
 This document freezes the production rules for building the multi-fire patch-level dataset. It generalizes the validated Phase 2 workflows while resolving known production inconsistencies before pipeline refactoring.
 
+Production contract version: `v2`.
+
 ## 1. Study population and modeling unit
 
-- Focal events: MTBS `Wildfire` events with ignition dates from 2013-01-01 through 2020-12-31.
+- Focal events: MTBS `Wildfire` events with ignition dates from 2015-01-01 through 2020-12-31.
 - Study region: WA, OR, CA, ID, NV, MT, WY, UT, CO, AZ, NM.
 - One modeling observation is one fixed 90 m × 90 m patch associated with one focal wildfire.
 - Primary target: fifth-season Landsat NBR (`NBR_5`).
@@ -118,21 +120,20 @@ Because a reliable focal-fire end date is unavailable, a later ignition from a d
 
 ## 6. LANDFIRE contract
 
-Use the newest historical LANDFIRE condition product whose incorporated disturbance period is safely before the focal fire.
+Use LF 2014 / v1.4.0 as the common pre-fire vegetation baseline for every retained 2015–2020 focal fire.
 
-Working mapping:
+Store `landfire_condition_year = 2014` and `landfire_version = "v1.4.0"` explicitly in every fire-manifest row.
 
-- 2013–2014 focal fires → LF 2012 / v1.3.0
-- 2015–2016 focal fires → LF 2014 / v1.4.0
-- 2017–2020 focal fires → LF 2016 Remap / v2.0.0
+### Phase 3.2.3C amendment and rationale
 
-Store `landfire_condition_year` and `landfire_version` explicitly in the fire manifest.
+The v2 contract excludes 2013–2014 focal fires because a consistent, readily accessible pre-fire LANDFIRE vegetation product could not be obtained through the chosen production stack without disproportionate archive/version-specific ingestion work. Using LF2014/v1.4.0 for all retained fires trades temporal freshness for consistent coverage, taxonomy, reproducibility, and implementation simplicity. LCMS/MTBS disturbance QA remains responsible for identifying major intervening disturbances between the baseline and focal fire.
 
-The scientifically intended version is the contract; the exact retrieval mechanism is an implementation detail and must be verified before production use.
+Historical Daymet, MTBS, LCMS, and Landsat lookback windows are unchanged. The focal-population start year does not truncate historical source data: retained fires may require data before 2015, and the Landsat 7/8 transition at 2013 remains unchanged.
 
 Other rules:
 
-- EVT forest/woodland eligibility must generalize beyond the Highline-specific class list.
+- Forest support and `forest_fraction` are based on official EVC tree-lifeform classes, not the Highline-specific EVT class list. Missing EVC remains missing and its coverage QA must be retained.
+- EVT remains the categorical vegetation/ecosystem feature; EVC remains the canopy/tree-cover source; EVH remains the height source.
 - Categorical EVT IDs are never numerically averaged.
 - EVC and EVH decoding must be centralized and based on the appropriate product metadata.
 - The open-ended EVH ≥99 m category may use 99 m as a documented lower-bound approximation unless implementation review provides a better justified treatment.
@@ -299,7 +300,7 @@ Include approximately:
 
 Splits:
 
-- 2013–2017 → train
+- 2015–2017 → train
 - 2018–2019 → validation
 - 2020 → test
 

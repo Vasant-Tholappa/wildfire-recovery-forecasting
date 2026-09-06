@@ -43,14 +43,12 @@ class FireDerivationTests(unittest.TestCase):
 
     def test_versions_and_splits(self):
         for year, condition, version, split in [
-            (2013, 2012, "v1.3.0", "train"),
-            (2014, 2012, "v1.3.0", "train"),
             (2015, 2014, "v1.4.0", "train"),
             (2016, 2014, "v1.4.0", "train"),
-            (2017, 2016, "v2.0.0", "train"),
-            (2018, 2016, "v2.0.0", "validation"),
-            (2019, 2016, "v2.0.0", "validation"),
-            (2020, 2016, "v2.0.0", "test"),
+            (2017, 2014, "v1.4.0", "train"),
+            (2018, 2014, "v1.4.0", "validation"),
+            (2019, 2014, "v1.4.0", "validation"),
+            (2020, 2014, "v1.4.0", "test"),
         ]:
             with self.subTest(year=year):
                 fields = catalog.derive_fire_fields(date(year, 7, 1))
@@ -60,7 +58,8 @@ class FireDerivationTests(unittest.TestCase):
                 self.assertEqual(fields["split"], split)
 
     def test_invalid_dates(self):
-        for value in [None, pd.NaT, 1501311600000, date(2012, 12, 31), date(2021, 1, 1)]:
+        for value in [None, pd.NaT, 1501311600000, date(2012, 12, 31),
+                      date(2013, 7, 1), date(2014, 12, 31), date(2021, 1, 1)]:
             with self.subTest(value=value), self.assertRaises(ValueError):
                 catalog.derive_fire_fields(value)
 
@@ -104,6 +103,21 @@ class GeometryNormalizationTests(unittest.TestCase):
 
 
 class ManifestTests(unittest.TestCase):
+    def test_focal_population_date_bounds(self):
+        for ignition, accepted in [
+            ("2013-07-01", False), ("2014-12-31", False),
+            ("2015-01-01", True), ("2020-12-31", True),
+            ("2021-01-01", False),
+        ]:
+            with self.subTest(ignition=ignition):
+                source = mtbs_rows()
+                source.at[0, "Ig_Date"] = pd.Timestamp(ignition, tz="UTC").value // 10**6
+                if accepted:
+                    self.assertEqual(len(catalog.manifest_from_mtbs(source)), 2)
+                else:
+                    with self.assertRaisesRegex(ValueError, "Focal fire year"):
+                        catalog.manifest_from_mtbs(source)
+
     def test_manifest_normalizes_collection_without_changing_source(self):
         source = mtbs_rows()
         polygon = source.geometry.iloc[0]
@@ -121,7 +135,9 @@ class ManifestTests(unittest.TestCase):
         manifest = catalog.manifest_from_mtbs(source)
         self.assertEqual(len(manifest), 2)
         self.assertTrue(manifest.fire_id.is_unique)
-        self.assertTrue(manifest.fire_year.between(2013, 2020).all())
+        self.assertTrue(manifest.fire_year.between(2015, 2020).all())
+        self.assertTrue(manifest.landfire_condition_year.eq(2014).all())
+        self.assertTrue(manifest.landfire_version.eq("v1.4.0").all())
         self.assertFalse(manifest.ignition_date.isna().any())
         self.assertFalse(manifest.geometry.isna().any())
         row = manifest.set_index("fire_id").loc["ID_TEST_2017"]
@@ -167,7 +183,7 @@ class ManifestTests(unittest.TestCase):
             ee.Filter.inList.assert_called_once_with("STUSPS", list(catalog.WESTERN_STATE_CODES))
             self.assertEqual(len(catalog.WESTERN_STATE_CODES), 11)
             ee.Filter.eq.assert_called_once_with("Incid_Type", "Wildfire")
-            self.assertEqual([c.args[0] for c in ee.Date.call_args_list], ["2013-01-01", "2021-01-01"])
+            self.assertEqual([c.args[0] for c in ee.Date.call_args_list], ["2015-01-01", "2021-01-01"])
             self.assertEqual([c.args[0] for c in fires.filter.call_args_list], ["wildfire_filter", "start_filter", "end_filter"])
             fires.filterBounds.assert_called_once_with(states.geometry.return_value)
             ee.data.computeFeatures.assert_called_once_with({

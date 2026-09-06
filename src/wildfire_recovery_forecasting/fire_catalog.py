@@ -35,17 +35,11 @@ def derive_fire_fields(ignition_date: date) -> dict[str, int | str]:
         ignition_date = ignition_date.date()
 
     fire_year = ignition_date.year
-    if not 2013 <= fire_year <= 2020:
-        raise ValueError("Focal fire year must be in 2013–2020")
+    if not 2015 <= fire_year <= 2020:
+        raise ValueError("Focal fire year must be in 2015–2020")
 
     season_end = date(fire_year, *GROWING_SEASON_END_MONTH_DAY)
     last_prefire_year = fire_year if ignition_date > season_end else fire_year - 1
-    if fire_year <= 2014:
-        condition_year, landfire_version = 2012, "v1.3.0"
-    elif fire_year <= 2016:
-        condition_year, landfire_version = 2014, "v1.4.0"
-    else:
-        condition_year, landfire_version = 2016, "v2.0.0"
 
     split = "train" if fire_year <= 2017 else "validation" if fire_year <= 2019 else "test"
     return {
@@ -55,8 +49,8 @@ def derive_fire_fields(ignition_date: date) -> dict[str, int | str]:
         "prefire_search_end_year": last_prefire_year,
         "season1_year": fire_year + 1,
         "season5_year": fire_year + 5,
-        "landfire_condition_year": condition_year,
-        "landfire_version": landfire_version,
+        "landfire_condition_year": 2014,
+        "landfire_version": "v1.4.0",
         "split": split,
     }
 
@@ -169,7 +163,7 @@ def build_fire_manifest() -> gpd.GeoDataFrame:
     fires = (
         ee.FeatureCollection(MTBS_SOURCE)
         .filter(ee.Filter.eq("Incid_Type", "Wildfire"))
-        .filter(ee.Filter.gte("Ig_Date", ee.Date("2013-01-01").millis()))
+        .filter(ee.Filter.gte("Ig_Date", ee.Date("2015-01-01").millis()))
         .filter(ee.Filter.lt("Ig_Date", ee.Date("2021-01-01").millis()))
         .filterBounds(western_states.geometry())
         .select(["Event_ID", "Incid_Name", "Incid_Type", "Ig_Date", "BurnBndAc"])

@@ -15,7 +15,7 @@ LANDSAT_MIN_VALID_ACQUISITION_DATES = 3
 DAYMET_HISTORICAL_BASELINE_YEARS = 10
 MTBS_PRIOR_FIRE_LOOKBACK_YEARS = (5, 7, 10)
 
-# Initial identifiers for the production contract, output schema, and grid.
-PRODUCTION_CONTRACT_VERSION = "v1"
+# Identifiers for the production contract, output schema, and grid.
+PRODUCTION_CONTRACT_VERSION = "v2"
 SCHEMA_VERSION = "v1"
 GRID_VERSION = "v1"

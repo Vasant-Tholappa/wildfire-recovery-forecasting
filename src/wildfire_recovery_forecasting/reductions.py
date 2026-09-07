@@ -186,7 +186,8 @@ def reduce_daymet(images, patches):
         for year, counts in history["valid_days_by_year"].items():
             start, end = daymet.climate_window(year, period)
             days = (date.fromisoformat(end) - date.fromisoformat(start)).days
-            normalized.append(counts.divide(days))
+            # Year-specific counts/divisors must share a type before collection min.
+            normalized.append(counts.divide(days).toDouble())
         minimum = ee.ImageCollection.fromImages(normalized).min().setDefaultProjection(
             history["image"].projection())
         for band in daymet.SUMMARY_BANDS:

@@ -67,7 +67,10 @@ def historical_baseline(
     """Average ten matched yearly summaries, with per-year daily coverage QA."""
     years = range(fire_year - DAYMET_HISTORICAL_BASELINE_YEARS, fire_year)
     annual = {year: aggregate_daymet_window(daily, year, period, projection) for year in years}
-    summaries = ee.ImageCollection.fromImages([value["image"] for value in annual.values()])
+    # Annual sums can retain different inferred ranges; normalize before stacking.
+    summaries = ee.ImageCollection.fromImages([
+        value["image"].toDouble() for value in annual.values()
+    ])
     return {
         "image": summaries.mean().setDefaultProjection(projection),
         "valid_years": summaries.count().unmask(0).setDefaultProjection(projection),

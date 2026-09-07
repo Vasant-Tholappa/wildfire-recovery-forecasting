@@ -4,13 +4,55 @@ import unittest
 from unittest.mock import patch
 
 import ee
+import pandas as pd
 from ee.apitestcase import ApiTestCase
 
-from wildfire_recovery_forecasting import daymet
+from wildfire_recovery_forecasting import daymet, reductions
 from test_landsat import graph_calls
 
 
 class DaymetTests(ApiTestCase):
+    def test_historical_collections_normalize_each_annual_summary(self):
+        projection = ee.Projection("EPSG:4326")
+        for period in ("pre_s1", "s1"):
+            annual = []
+
+            def aggregate(daily, year, requested_period, source_projection):
+                # Distinct year-specific constant types, with an existing mask.
+                image = (ee.Image.constant([year] * 4).rename(daymet.SUMMARY_BANDS)
+                         .updateMask(ee.Image.constant(0)).setDefaultProjection(projection))
+                annual.append(image)
+                return {"image": image, "valid_days": image}
+
+            with patch.object(daymet, "aggregate_daymet_window", side_effect=aggregate), \
+                 patch.object(ee.ImageCollection, "fromImages", wraps=ee.ImageCollection.fromImages) as stack:
+                daymet.historical_baseline(ee.ImageCollection([]), 2018, period, projection)
+            members = stack.call_args.args[0]
+            self.assertEqual(len(members), 10)
+            for member, original in zip(members, annual):
+                self.assertEqual(member.serialize(), original.toDouble().serialize())
+
+    def test_historical_daily_coverage_normalized_after_yearly_division(self):
+        images = daymet.build_fire_climate_images(
+            {"fire_year": 2018, "season1_year": 2019}, ee.Geometry.Point([-122, 43]))
+
+        def area_sums(values, patches, projection):
+            row = {"patch_id": "p", "fire_id": "f", reductions.RASTER_FULL_AREA: 8100.}
+            for name in values:
+                row[name + "_sum"] = 8100.
+                row[name + "_area"] = 8100.
+            return pd.DataFrame([row])
+
+        with patch.object(reductions, "area_sums", side_effect=area_sums), \
+             patch.object(ee.ImageCollection, "fromImages", wraps=ee.ImageCollection.fromImages) as stack:
+            reductions.reduce_daymet(images, ee.FeatureCollection([]))
+        self.assertEqual(stack.call_count, 2)
+        for call in stack.call_args_list:
+            self.assertEqual(len(call.args[0]), 10)
+            for member in call.args[0]:
+                self.assertEqual(member.func.getSignature()["name"], "Image.toDouble")
+                self.assertEqual(member.args["value"].func.getSignature()["name"], "Image.divide")
+
     def test_calendar_windows(self):
         self.assertEqual(daymet.climate_window(2016, "pre_s1"), ("2016-01-01", "2016-06-01"))
         self.assertEqual(daymet.climate_window(2016, "s1"), ("2016-06-01", "2016-10-01"))

@@ -156,7 +156,8 @@ def summarize_lcms_window(annual: dict, years: list[int], projection: ee.Project
         masks = [flags[year][category] for year in years]
         result[category] = (ee.ImageCollection.fromImages(masks).max()
                             .rename(category).setDefaultProjection(projection))
-        dated = [mask.multiply(0).add(year).updateMask(mask.eq(1)).rename("first_year")
+        # Year constants otherwise infer incompatible year-specific integer ranges.
+        dated = [mask.multiply(0).add(year).updateMask(mask.eq(1)).rename("first_year").toInt16()
                  for year, mask in zip(years, masks)]
         result[f"{category}_first_year"] = (ee.ImageCollection.fromImages(dated).min()
                                             .rename(f"{category}_first_year")

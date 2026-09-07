@@ -36,6 +36,9 @@ class Pixels(RemapPixels):
     def setDefaultProjection(self, projection):
         return self
 
+    def toInt16(self):
+        return Pixels(self.values.astype(np.int16))
+
 
 class Collection:
     def __init__(self, images):
@@ -83,6 +86,23 @@ class LcmsNumericTests(unittest.TestCase):
 
 
 class LcmsGraphTests(ApiTestCase):
+    def test_each_annual_timing_image_has_common_int16_type(self):
+        years = [2012, 2013]
+        annual = {year: ee.Image.constant(9).rename("Change") for year in years}
+        with patch.object(ee.data, "computeValue", side_effect=AssertionError("Network")), \
+                patch.object(ee.ImageCollection, "fromImages", wraps=ee.ImageCollection.fromImages) as collections:
+            d.summarize_lcms_window(annual, years, ee.Projection("EPSG:5070"))
+        timing = [call.args[0] for call in collections.call_args_list
+                  if "Image.toInt16" in call.args[0][0].serialize()]
+        self.assertEqual(len(timing), 2)  # Clear disturbance and Other Loss.
+        for images in timing:
+            self.assertEqual(len(images), len(years))
+            for image, year in zip(images, years):
+                graph = image.serialize()
+                self.assertIn("Image.toInt16", graph)
+                self.assertIn("Image.updateMask", graph)
+                self.assertIn(str(year), graph)
+
     def test_source_missing_year_branch_native_grid_and_qa_role(self):
         with patch.object(ee.data, "computeValue", side_effect=AssertionError("Network")):
             result = d.build_lcms_history({"fire_year": 2020, "season5_year": 2025},

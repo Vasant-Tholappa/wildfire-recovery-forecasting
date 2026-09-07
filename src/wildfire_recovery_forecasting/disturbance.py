@@ -106,3 +106,93 @@ def build_wildfire_history(fire, search_geometry: ee.Geometry) -> dict:
     else:
         records = records.set_crs("EPSG:4326")
     return history_from_mtbs(fire, records)
+
+
+LCMS_SOURCE = "projects/gtac-data-publish/assets/LCMS/Product_Version/2025-11"
+LCMS_CLEAR_CODES = (1, 2, 5, 6, 8, 9, 10, 11)
+LCMS_OTHER_LOSS_CODES = (13,)
+
+
+def lcms_year_windows(fire) -> dict[str, list[int]]:
+    """Annual retrospective windows, not exact ignition/cutoff timestamps."""
+    year, season5 = fire.get("fire_year"), fire.get("season5_year")
+    if (not isinstance(year, Integral) or isinstance(year, bool)
+            or not 2015 <= year <= 2020 or season5 != year + 5):
+        raise ValueError("Require manifest fire_year 2015–2020 and matching season5_year")
+    return {
+        **{f"pre_{n}yr": list(range(year - n, year)) for n in (5, 7, 10)},
+        "post_y_to_y5": list(range(year, season5 + 1)),
+    }
+
+
+def lcms_change_flags(change: ee.Image) -> dict[str, ee.Image]:
+    """Phase 2 classes: known 1–15 valid; 16/unknown/masked pixels unavailable."""
+    valid_change = change.remap(list(range(1, 16)), list(range(1, 16)))
+    return {
+        name: valid_change.remap(list(codes), [1] * len(codes), 0).rename(name)
+        for name, codes in (("clear_disturbance", LCMS_CLEAR_CODES),
+                            ("other_loss", LCMS_OTHER_LOSS_CODES))
+    }
+
+
+def summarize_lcms_window(annual: dict, years: list[int], projection: ee.Projection) -> dict:
+    """Observed spatial unions and first observed years, with explicit coverage.
+
+    A union is 1 if detected in any observed year; 0 means no observed detection,
+    and must be interpreted with valid_years/complete_coverage. No valid years
+    remains masked. First years are masked when no detection exists, and may
+    be later than the true first disturbance if earlier coverage is missing.
+    complete_coverage is QA, not a patch eligibility threshold or pixel filter.
+    """
+    flags = {year: lcms_change_flags(annual[year]) for year in years}
+    valid = ee.ImageCollection.fromImages([
+        flags[year]["clear_disturbance"] for year in years
+    ]).count().unmask(0, sameFootprint=False).rename("valid_years").setDefaultProjection(projection)
+    result = {
+        "years": years, "expected_years": len(years), "valid_years": valid,
+        "complete_coverage": valid.eq(len(years)).rename("complete_coverage"),
+    }
+    for category in ("clear_disturbance", "other_loss"):
+        masks = [flags[year][category] for year in years]
+        result[category] = (ee.ImageCollection.fromImages(masks).max()
+                            .rename(category).setDefaultProjection(projection))
+        dated = [mask.multiply(0).add(year).updateMask(mask.eq(1)).rename("first_year")
+                 for year, mask in zip(years, masks)]
+        result[f"{category}_first_year"] = (ee.ImageCollection.fromImages(dated).min()
+                                            .rename(f"{category}_first_year")
+                                            .setDefaultProjection(projection))
+    return result
+
+
+def build_lcms_history(fire, geometry: ee.Geometry) -> dict:
+    """Build native LCMS retrospective QA only; no reduction, filtering or exports.
+
+    Focal-year labels cannot order change relative to ignition. Season-5 labels
+    cannot order change relative to September 30. Neither detections nor their
+    annual timing belong in normal model predictors. MTBS handles wildfire QA.
+
+    Retain annual image counts: missing or duplicate CONUS year records yield
+    masked annual data, never arbitrary first-image selection or zero change.
+    Native projection comes from an available regional source image; an empty
+    regional source fails on evaluation rather than inventing a reference grid.
+    """
+    windows = lcms_year_windows(fire)
+    years = sorted({year for window in windows.values() for year in window})
+    source = (ee.ImageCollection(LCMS_SOURCE).filter(ee.Filter.eq("study_area", "CONUS"))
+              .filterBounds(geometry).filter(ee.Filter.gte("year", years[0]))
+              .filter(ee.Filter.lte("year", years[-1])))
+    projection = ee.Image(source.sort("year").first()).select("Change").projection()
+    missing = ee.Image.constant(0).rename("Change").updateMask(ee.Image.constant(0)).setDefaultProjection(projection)
+    annual, counts = {}, {}
+    for year in years:
+        candidates = source.filter(ee.Filter.eq("year", year))
+        counts[year] = candidates.size()
+        annual[year] = ee.Image(ee.Algorithms.If(
+            counts[year].eq(1), ee.Image(candidates.first()).select("Change"), missing))
+    return {
+        "source_dataset": LCMS_SOURCE, "role": "retrospective_qa_only",
+        "timing_resolution": "annual; focal-year and Season-5 within-year ordering uncertain",
+        "annual_image_counts": counts,
+        "windows": {name: summarize_lcms_window(annual, window, projection)
+                    for name, window in windows.items()},
+    }

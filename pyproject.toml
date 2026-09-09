@@ -11,6 +11,7 @@ dependencies = [
     "earthengine-api>=1.7.40",
     "geemap>=0.38.3",
     "geopandas>=1.1.4",
+    "google-cloud-storage>=3.13.1",
     "ipykernel>=7.3.0",
     "jupyter>=1.1.1",
     "matplotlib>=3.11.1",

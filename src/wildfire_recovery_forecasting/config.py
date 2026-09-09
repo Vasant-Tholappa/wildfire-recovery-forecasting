@@ -19,3 +19,9 @@ MTBS_PRIOR_FIRE_LOOKBACK_YEARS = (5, 7, 10)
 PRODUCTION_CONTRACT_VERSION = "v2"
 SCHEMA_VERSION = "v1"
 GRID_VERSION = "v1"
+
+# Cloud execution contract: notes/phase3_4_production_contract.md.
+GCP_PROJECT = "ee-wildfire-recovery-vasant"
+GCS_BUCKET = "ee-wildfire-recovery-vasant-data"
+GCS_REGION = "us-central1"
+PRODUCTION_VERSION = "phase3_prod_v1"

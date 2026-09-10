@@ -119,7 +119,7 @@ def read_run_metadata(*, client=None, production_version=config.PRODUCTION_VERSI
 
 
 def csv_to_parquet(source, fire_id, batch_id, *, expected_patch_ids,
-                   expected_columns, client=None,
+                   expected_columns, client=None, on_stage=None,
                    production_version=config.PRODUCTION_VERSION):
     """Validate completed raw CSV shards and upload one in-memory Parquet file.
 
@@ -129,7 +129,13 @@ def csv_to_parquet(source, fire_id, batch_id, *, expected_patch_ids,
     must exist in every shard; additional raw columns are retained. Output rows
     follow expected_patch_ids. No scientific transformation or null filling.
     This writes the deterministic destination and leaves raw objects intact.
+    on_stage, if supplied, is called before each operation for persisted progress.
     """
+    def stage(name):
+        if on_stage is not None:
+            on_stage(name)
+
+    stage("STRUCTURAL_VALIDATION")
     prefix = production.raw_export_prefix(
         source, fire_id, batch_id, production_version=production_version)
     destination = production.parquet_path(
@@ -139,6 +145,7 @@ def csv_to_parquet(source, fire_id, batch_id, *, expected_patch_ids,
     if not expected:
         raise ValueError("Expected batch patch IDs must be nonempty")
     required = {"patch_id", "fire_id", *expected_columns}
+    stage("RAW_OUTPUT_CHECK")
     if client is None:
         client = storage.Client(project=config.GCP_PROJECT)
     pattern = re.compile(re.escape(prefix) + r"(?:-\d+(?:-\d+)*)?\.csv")
@@ -149,12 +156,14 @@ def csv_to_parquet(source, fire_id, batch_id, *, expected_patch_ids,
         raise ValueError(f"No completed CSV output found for gs://{config.GCS_BUCKET}/{prefix}")
     shards = []
     for blob in blobs:
+        stage("CSV_TO_PARQUET")
         try:
             table = pd.read_csv(BytesIO(blob.download_as_bytes()),
                                 dtype={"patch_id": "string", "fire_id": "string"},
                                 keep_default_na=False, na_values=[""])
         except pd.errors.EmptyDataError as error:
             raise ValueError(f"Empty CSV output: {blob.name}") from error
+        stage("STRUCTURAL_VALIDATION")
         missing = required - set(table.columns)
         if missing:
             raise ValueError(f"Missing required columns in {blob.name}: {sorted(missing)}")
@@ -168,8 +177,10 @@ def csv_to_parquet(source, fire_id, batch_id, *, expected_patch_ids,
         raise ValueError("Raw CSV output contains no rows")
     validate_patch_table(combined, expected_ids=expected, fire_id=fire_id)
     combined = combined.set_index("patch_id").loc[expected].reset_index()
+    stage("CSV_TO_PARQUET")
     buffer = BytesIO()
     combined.to_parquet(buffer, engine="pyarrow", index=False)
+    stage("PARQUET_UPLOAD")
     client.bucket(config.GCS_BUCKET).blob(destination).upload_from_string(
         buffer.getvalue(), content_type="application/octet-stream")
     return {"row_count": len(combined), "output_uri": f"gs://{config.GCS_BUCKET}/{destination}"}

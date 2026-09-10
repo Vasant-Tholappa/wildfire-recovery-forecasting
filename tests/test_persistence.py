@@ -96,6 +96,16 @@ class PersistenceTests(unittest.TestCase):
                 self.convert(expected)
         self.output.upload_from_string.assert_not_called()
 
+    def test_stage_callback_tracks_actual_conversion_boundaries(self):
+        events = []
+        self.client.list_blobs.side_effect = lambda *a, **kw: (
+            events.append("list") or [self.blob(".csv", "patch_id,fire_id,value\n001,fire,1\n002,fire,2\n")])
+        self.output.upload_from_string.side_effect = lambda *a, **kw: events.append("upload")
+        persistence.csv_to_parquet("terrain", "fire", "r0_c1", expected_patch_ids=["001", "002"],
+            expected_columns=["value"], client=self.client, on_stage=events.append)
+        self.assertEqual(events, ["STRUCTURAL_VALIDATION", "RAW_OUTPUT_CHECK", "list",
+            "CSV_TO_PARQUET", "STRUCTURAL_VALIDATION", "CSV_TO_PARQUET", "PARQUET_UPLOAD", "upload"])
+
 
 if __name__ == "__main__":
     unittest.main()

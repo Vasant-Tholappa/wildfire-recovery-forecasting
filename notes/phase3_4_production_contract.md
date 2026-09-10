@@ -86,3 +86,27 @@ and tile configuration always produce the same assignments.
 it is recorded in the run batching configuration and must remain fixed within that
 production version. A changed official batching configuration requires a new
 production configuration/version.
+
+## Resume/orchestration mental model
+
+Each call advances one source/fire/batch; it never waits for EE to finish.
+
+- No saved status → save submission intent → submit EE → `RUNNING / EE_EXPORT`
+  with the task ID.
+- `RUNNING / EE_EXPORT` → EE `READY`/`RUNNING`: wait; EE `COMPLETED`: continue
+  downstream; EE `FAILED`/`CANCELLED`: `FAILED / EE_EXPORT`.
+- Downstream → check raw GCS output → CSV/Parquet processing and structural
+  validation → Parquet upload → `COMPLETE / COMPLETE`. Stage callbacks mark the
+  actual operation, including repeated validation/encoding steps. Failures retain
+  the failing stage and error; interrupted downstream work can replay from raw CSV.
+- Previously `COMPLETE` → skip entirely after reading status.
+- Previously `FAILED` → do nothing by default; retry only on explicit request.
+  Check the stored EE task first: reuse active work or a completed export rather
+  than resubmitting it.
+
+Earth Engine supplies task state. GCS supplies persisted files/objects. Python
+combines those facts and writes our status JSON; file existence alone never means
+COMPLETE. Restarting Python must not duplicate active or completed work. Missing
+task IDs/unknown states require review; failed exports with leftover raw objects
+also require review before resubmission. Calls for the same work item must be
+serialized; this is not a concurrent-worker locking system.

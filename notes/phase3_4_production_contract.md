@@ -44,6 +44,7 @@ Use a plain JSON object with these fields:
 | --- | --- |
 | production_version, fire_id, source, batch_id | Strings identifying the work item |
 | status | `RUNNING`, `FAILED`, or `COMPLETE` |
+| stage | Required: `EE_EXPORT`, `RAW_OUTPUT_CHECK`, `CSV_TO_PARQUET`, `STRUCTURAL_VALIDATION`, `PARQUET_UPLOAD`, or `COMPLETE` |
 | ee_task_id | String or null when not applicable/known |
 | row_count | Nonnegative integer or null when unknown |
 | output_uri | GCS URI string or null when unknown |
@@ -52,15 +53,17 @@ Use a plain JSON object with these fields:
 | error_message | String or null when not applicable |
 
 `MISSING` is inferred from absence of a status record, not a written status.
+`COMPLETE` status requires stage `COMPLETE`. For `RUNNING` or `FAILED`, the caller
+supplies the current or failing operation's stage; transition logic is deferred.
 Failure to read a record is not evidence that it is absent.
 
 ## Run metadata
 
 Use a plain JSON object containing `production_version`, `contract_version`,
 `grid_version`, `schema_version`, `git_commit`, `gcp_project`, `gcs_bucket`,
-`region`, `batching_configuration`, and `created_at`.
+`gcs_region`, `batching_configuration`, and `created_at`.
 Version, commit and location fields are strings; `created_at` is a UTC ISO 8601
-timestamp. `batching_configuration` is null until specified, then a JSON object.
+timestamp. `batching_configuration` is a JSON object (empty until settings are specified).
 `contract_version` uses the existing `PRODUCTION_CONTRACT_VERSION` constant.
 
 This step provides constants and pure path construction only. It does not perform

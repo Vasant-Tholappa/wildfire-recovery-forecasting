@@ -3,6 +3,10 @@
 from wildfire_recovery_forecasting.config import PRODUCTION_VERSION
 
 WORK_ITEM_STATUSES = frozenset({"RUNNING", "FAILED", "COMPLETE"})
+WORK_ITEM_STAGES = frozenset({
+    "EE_EXPORT", "RAW_OUTPUT_CHECK", "CSV_TO_PARQUET",
+    "STRUCTURAL_VALIDATION", "PARQUET_UPLOAD", "COMPLETE",
+})
 
 
 def _component(value: str) -> str:

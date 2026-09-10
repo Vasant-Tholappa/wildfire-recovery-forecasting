@@ -65,3 +65,21 @@ timestamp. `batching_configuration` is null until specified, then a JSON object.
 
 This step provides constants and pure path construction only. It does not perform
 batching, Earth Engine exports, Parquet conversion, cloud writes, or orchestration.
+
+
+## Spatial batching
+
+Production batches are fixed 2D square tiles over the canonical global grid using
+`grid_row` and `grid_col`; they are not sequential row-major chunks.
+
+Each retained patch belongs to exactly one tile. Irregular fire boundaries may
+therefore produce sparse batches with fewer patches than the tile maximum; patches
+from other tiles are never pulled in to fill them.
+
+Batch IDs are derived deterministically from tile coordinates, so the same grid
+and tile configuration always produce the same assignments.
+
+`tile_side_cells` remains configurable until production benchmarking. Once chosen,
+it is recorded in the run batching configuration and must remain fixed within that
+production version. A changed official batching configuration requires a new
+production configuration/version.

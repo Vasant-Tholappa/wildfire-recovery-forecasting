@@ -158,6 +158,71 @@ class JoinTests(unittest.TestCase):
         self.assertEqual(len(selected), 24)
         self.assertEqual(np.isclose(selected.fire_overlap_fraction, 1).sum(), 12)
 
+    def test_existing_batch_runs_once_without_grid_rebuild(self):
+        ignition = datetime(2017, 7, 29, tzinfo=timezone.utc)
+        fire = {"fire_id": "fire", "fire_size_acres": 3, "ignition_date": ignition,
+                **derive_fire_fields(ignition)}
+        batch = self.patches.iloc[1:].assign(batch_id="r0_c0")
+        original = batch.copy()
+        table = pd.DataFrame(batch[["patch_id", "fire_id"]])
+        roles = pipeline.dataset_roles([])
+        for name in (set(roles["predictors"]) | {roles["target"]}) - {
+            "fire_size_acres", "ignition_month"
+        }:
+            table[name] = .5
+        callbacks = []
+        with patch.object(pipeline, "build_fire_grid", side_effect=AssertionError("Grid rebuilt")), \
+             patch.object(pipeline, "source_patch_tables", return_value=iter([("mock", table)])) as source:
+            result = pipeline.run_patch_pipeline(
+                fire, batch, on_source=lambda name, value: callbacks.append((name, value)),
+                git_commit="abc", manifest_version="pilot", landsat_batch_size=1)
+        source.assert_called_once()
+        self.assertIs(source.call_args.args[1], batch)
+        self.assertEqual(source.call_args.kwargs, {"landsat_batch_size": 1})
+        self.assertIs(result["patches"], batch)
+        self.assertTrue(batch.equals(original))
+        self.assertEqual(result["table"].patch_id.tolist(), batch.patch_id.tolist())
+        self.assertEqual(result["table"].batch_id.tolist(), ["r0_c0"])
+        self.assertEqual(result["table"].ignition_month.tolist(), [7])
+        self.assertEqual(result["roles"]["target"], "nbr_5_mean")
+        self.assertEqual(result["metadata"]["git_commit"], "abc")
+        self.assertEqual(result["metadata"]["manifest_version"], "pilot")
+        self.assertEqual(len(callbacks), 1)
+        self.assertIs(callbacks[0][1], table)
+        self.assertEqual(set(result), {"patches", "source_tables", "table", "roles", "metadata"})
+
+    def test_fire_runner_builds_once_filters_and_delegates(self):
+        fire = {"geometry": box(0, 0, 135, 90), "fire_id": "fire"}
+        sentinel = object()
+        with patch.object(pipeline, "build_fire_grid", return_value=self.patches) as build, \
+             patch.object(pipeline, "run_patch_pipeline", return_value=sentinel) as run:
+            result = pipeline.run_fire_pipeline(
+                fire, perimeter_crs="EPSG:5070", patch_ids=[self.patches.patch_id.iloc[1]],
+                git_commit="abc", manifest_version="pilot", landsat_batch_size=2)
+        build.assert_called_once_with(fire["geometry"], "fire", perimeter_crs="EPSG:5070")
+        run.assert_called_once()
+        self.assertEqual(run.call_args.args[1].patch_id.tolist(), [self.patches.patch_id.iloc[1]])
+        self.assertEqual(run.call_args.kwargs, {"on_source": None, "git_commit": "abc",
+                                              "manifest_version": "pilot", "landsat_batch_size": 2})
+        self.assertIs(result, sentinel)
+
+    def test_patch_runner_rejects_bad_inputs_before_sources(self):
+        missing_geometry = self.patches.copy()
+        missing_geometry.loc[missing_geometry.index[0], "geometry"] = None
+        broken = [None, pd.DataFrame(self.patches), self.patches.iloc[:0],
+                  self.patches.assign(fire_id="wrong"),
+                  self.patches.assign(fire_id=["fire", "other"]),
+                  self.patches.assign(patch_id=["same", "same"]),
+                  self.patches.assign(patch_id=[None, "p"]),
+                  self.patches.to_crs("EPSG:4326"), missing_geometry]
+        with patch.object(pipeline, "source_patch_tables") as source, \
+             patch.object(pipeline, "build_fire_grid") as build:
+            for patches in broken:
+                with self.subTest(patches=type(patches)), self.assertRaises(ValueError):
+                    pipeline.run_patch_pipeline({"fire_id": "fire"}, patches)
+            source.assert_not_called()
+            build.assert_not_called()
+
 
 class ReductionGraphTests(ApiTestCase):
     def test_landfire_reduction_uses_distinct_grids_and_categorical_groups(self):

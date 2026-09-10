@@ -9,6 +9,7 @@ from datetime import datetime, timezone
 from numbers import Integral
 
 import ee
+import geopandas as gpd
 import numpy as np
 import pandas as pd
 
@@ -147,6 +148,22 @@ def run_fire_pipeline(fire, *, perimeter_crs, patch_ids=None, on_source=None,
             raise ValueError("Duplicate requested patch IDs")
         patches = patches.loc[patches.patch_id.isin(requested)].reset_index(drop=True)
         validate_patch_table(patches, expected_ids=requested, fire_id=fire["fire_id"])
+    return run_patch_pipeline(
+        fire, patches, on_source=on_source, git_commit=git_commit,
+        manifest_version=manifest_version, landsat_batch_size=landsat_batch_size,
+    )
+
+
+def run_patch_pipeline(fire, patches, *, on_source=None, git_commit=None,
+                       manifest_version=None, landsat_batch_size=None):
+    """Process an existing canonical fire patch set without building a grid.
+
+    Accept a nonempty EPSG:5070 GeoDataFrame for exactly this fire. Preserve
+    supplied patches, including batch metadata, and return the same structure
+    as run_fire_pipeline. Source callbacks and provenance options are identical.
+    """
+    if not isinstance(patches, gpd.GeoDataFrame):
+        raise ValueError("patches must be a GeoDataFrame")
     validate_patches(patches, fire["fire_id"])
     tables = {}
     for name, table in source_patch_tables(fire, patches, landsat_batch_size=landsat_batch_size):

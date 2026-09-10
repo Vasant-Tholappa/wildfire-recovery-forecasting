@@ -1,12 +1,48 @@
 """Common production patch grid and patch identifiers."""
 
 from math import ceil, floor, isfinite
+from numbers import Integral
 
 import geopandas as gpd
 from pyproj import CRS
 from shapely.geometry import MultiPolygon, Polygon, box
 
 from wildfire_recovery_forecasting.config import GRID_CRS, PATCH_SIZE_M
+
+
+def assign_spatial_batches(
+    patches: gpd.GeoDataFrame, *, tile_side_cells: int,
+) -> gpd.GeoDataFrame:
+    """Copy one fire's retained grid, adding globally aligned square-tile IDs.
+
+    Tile indices are grid_row // tile_side_cells and grid_col // tile_side_cells,
+    including floor division for negative indices. IDs are r{tile_row}_c{tile_col}.
+    Preserve input order, index, CRS, geometries and patch IDs; never fill tiles.
+    Callers can group the result by batch_id. Tile size has no default and must
+    remain fixed within a persisted batching configuration.
+    """
+    if (not isinstance(tile_side_cells, Integral) or isinstance(tile_side_cells, bool)
+            or tile_side_cells <= 0):
+        raise ValueError("tile_side_cells must be a positive integer")
+    required = {"patch_id", "fire_id", "grid_row", "grid_col"}
+    if not isinstance(patches, gpd.GeoDataFrame) or not required.issubset(patches.columns):
+        raise ValueError("Require a fire GeoDataFrame with patch IDs and global grid indices")
+    if patches.patch_id.isna().any() or not patches.patch_id.is_unique:
+        raise ValueError("patch_id must be nonmissing and unique")
+    if patches.fire_id.isna().any() or patches.fire_id.nunique() > 1:
+        raise ValueError("Require patches from one fire")
+    for column in ("grid_row", "grid_col"):
+        if not all(isinstance(value, Integral) and not isinstance(value, bool)
+                   for value in patches[column]):
+            raise ValueError("Global grid indices must be nonmissing integers")
+    if patches.duplicated(["grid_row", "grid_col"]).any():
+        raise ValueError("Each global grid cell must occur only once within a fire")
+    result = patches.copy()
+    result["batch_id"] = [
+        f"r{row // tile_side_cells}_c{col // tile_side_cells}"
+        for row, col in zip(patches.grid_row, patches.grid_col)
+    ]
+    return result
 
 
 def build_fire_grid(

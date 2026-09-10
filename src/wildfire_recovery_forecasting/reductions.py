@@ -26,10 +26,15 @@ SEVERITY_CLASSES = {
 }
 
 
+def without_geometry(collection):
+    """Keep table properties without transferring patch polygons."""
+    return collection.map(lambda feature: feature.setGeometry(None))
+
+
 def fetch_patch_table(collection, columns):
     """Evaluate one source table, retaining null properties as explicit columns."""
     table = ee.data.computeFeatures({
-        "expression": collection.map(lambda feature: feature.setGeometry(None)),
+        "expression": without_geometry(collection),
         "fileFormat": "PANDAS_DATAFRAME",
     })
     validate_patch_table(table)
@@ -38,16 +43,21 @@ def fetch_patch_table(collection, columns):
 
 def area_sums(images, patches, projection):
     """Retrieve variable sums and an unmasked full-area reference in one reduction."""
+    reduced = build_area_sums(images, patches, projection)
+    return fetch_patch_table(reduced, [RASTER_FULL_AREA] + [
+        name + suffix for name in images for suffix in ("_sum", "_area")])
+
+
+def build_area_sums(images, patches, projection):
+    """Build the same raw reduction FeatureCollection without evaluating rows."""
     bands = [ee.Image.pixelArea().rename(RASTER_FULL_AREA)]
     for name, image in images.items():
         area = ee.Image.pixelArea().updateMask(image.mask())
         bands.extend([image.multiply(area).rename(name + "_sum"), area.rename(name + "_area")])
-    reduced = ee.Image.cat(bands).reduceRegions(
+    return ee.Image.cat(bands).reduceRegions(
         collection=patches, reducer=ee.Reducer.sum(),
         crs=projection, tileScale=4,
     )
-    return fetch_patch_table(reduced, [RASTER_FULL_AREA] + [
-        name + suffix for name in images for suffix in ("_sum", "_area")])
 
 
 def summarize_area_sums(raw, names, *, support=None, fractions=()):

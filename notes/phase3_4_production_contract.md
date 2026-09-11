@@ -13,7 +13,9 @@ by [the Phase 3 production contract](../docs/phase3_production_contract.md).
 | grid_version | `v1` |
 | schema_version | `v1` |
 
-The unit of work is `(production_version, fire_id, source, batch_id)`.
+The unit of work is `(production_version, fire_id, source, product, batch_id)`.
+`product` is optional for single-product sources; their existing paths and status
+records remain unchanged when it is omitted.
 Batch IDs are deterministic strings supplied by later batching logic. Path helpers
 preserve them exactly, including leading zeros; no batch size or ID-generation
 algorithm is chosen here.
@@ -110,3 +112,36 @@ COMPLETE. Restarting Python must not duplicate active or completed work. Missing
 task IDs/unknown states require review; failed exports with leftover raw objects
 also require review before resubmission. Calls for the same work item must be
 serialized; this is not a concurrent-worker locking system.
+
+## Landsat production products
+
+Landsat persists five independent products per spatial batch under the single
+logical source `landsat`:
+
+| Product | Existing reduction fields |
+| --- | --- |
+| `nbrpre` | NBRpre and prefire selected-year count |
+| `season1` | NBR1 and Season-1 observation count |
+| `nbr5` | NBR5 |
+| `season5_count` | Season-5 observation count |
+| `nbrdrop` | Pixelwise NBRpre minus NBR1 |
+
+For a supplied product, paths insert `product={product}/` after the source:
+`production/{version}/{raw_exports|parquet|status}/landsat/product={product}/fire_id={fire_id}/batch_{batch_id}`
+with the existing file suffixes. Status JSON includes `product`; readers verify
+it matches the requested identity. Each product has its own task ID, status,
+raw CSVs and intermediate Parquet, so completion/retry applies to that product
+only. Omitted products keep the old path and omit the JSON field.
+
+This preserves the memory-safe independent graphs validated earlier. The shared
+`LANDSAT_PRODUCTS` definitions and `build_area_sums()` power both synchronous
+reductions and `build_landsat_products()`. Production outputs remain raw sums,
+valid areas and the same-grid full-area denominator. Later final assembly will reuse
+the validated local summarization and one-to-one joins; the graphs are never
+recombined into one Earth Engine export. One completed product does not establish
+completion of the whole Landsat source.
+
+**Phase 3.7 consolidation note:** Include this interview/debugging story: the
+initial one-source/one-task assumption conflicted with Landsat's five products;
+we preserved the memory-safe independent graphs and extended production identity
+instead of recombining them.

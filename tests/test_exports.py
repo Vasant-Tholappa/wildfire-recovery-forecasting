@@ -9,6 +9,15 @@ from wildfire_recovery_forecasting import exports, production, reductions
 
 
 class ExportTests(ApiTestCase):
+    def test_product_exports_have_distinct_descriptions_and_prefixes(self):
+        task = Mock()
+        with patch.object(ee.batch.Export.table, "toCloudStorage", return_value=task) as submit:
+            for product in reductions.LANDSAT_PRODUCTS:
+                exports.start_table_export(ee.FeatureCollection([]), [], source="landsat",
+                    fire_id="fire", batch_id="r0_c0", product=product)
+        self.assertEqual(len({c.kwargs["description"] for c in submit.call_args_list}), 5)
+        self.assertEqual(len({c.kwargs["fileNamePrefix"] for c in submit.call_args_list}), 5)
+
     def test_csv_configuration_starts_task_without_fetch_or_poll(self):
         collection = ee.FeatureCollection([ee.Feature(None, {"patch_id": "p", "fire_id": "f"})])
         task = Mock()

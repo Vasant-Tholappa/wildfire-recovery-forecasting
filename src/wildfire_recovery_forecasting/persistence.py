@@ -52,12 +52,12 @@ def _validate_stage(status, stage):
         raise ValueError("COMPLETE status and stage must occur together")
 
 
-def write_status(source, fire_id, batch_id, *, status, stage, started_at,
+def write_status(source, fire_id, batch_id, *, status, stage, started_at, product=None,
                  ee_task_id=None, row_count=None, output_uri=None,
                  completed_at=None, error_message=None, client=None,
                  production_version=config.PRODUCTION_VERSION):
     """Write the caller's explicit status; no task/output inspection or retries."""
-    path = production.status_path(source, fire_id, batch_id, production_version=production_version)
+    path = production.status_path(source, fire_id, batch_id, product=product, production_version=production_version)
     if status not in production.WORK_ITEM_STATUSES:
         raise ValueError("Status must be RUNNING, FAILED, or COMPLETE")
     _validate_stage(status, stage)
@@ -69,6 +69,7 @@ def write_status(source, fire_id, batch_id, *, status, stage, started_at,
     return _write_json(path, {
         "production_version": production_version, "fire_id": fire_id,
         "source": source, "batch_id": batch_id, "status": status, "stage": stage,
+        **({"product": product} if product is not None else {}),
         "ee_task_id": ee_task_id, "row_count": row_count, "output_uri": output_uri,
         "started_at": _timestamp(started_at),
         "completed_at": None if completed_at is None else _timestamp(completed_at),
@@ -76,17 +77,19 @@ def write_status(source, fire_id, batch_id, *, status, stage, started_at,
     }, client)
 
 
-def read_status(source, fire_id, batch_id, *, client=None,
+def read_status(source, fire_id, batch_id, *, client=None, product=None,
                 production_version=config.PRODUCTION_VERSION):
     """Return stored status, or None only for GCS NotFound; other failures propagate."""
     record = _read_json(production.status_path(
-        source, fire_id, batch_id, production_version=production_version), client)
+        source, fire_id, batch_id, product=product, production_version=production_version), client)
     if record is not None:
         if record.get("status") not in production.WORK_ITEM_STATUSES:
             raise ValueError("Invalid stored status")
         _validate_stage(record["status"], record.get("stage"))
         expected = {"production_version": production_version, "source": source,
                     "fire_id": fire_id, "batch_id": batch_id}
+        if record.get("product") != product:
+            raise ValueError("Stored status product does not match requested product")
         if any(record.get(key) != value for key, value in expected.items()):
             raise ValueError("Stored status identity does not match requested work item")
     return record
@@ -119,7 +122,7 @@ def read_run_metadata(*, client=None, production_version=config.PRODUCTION_VERSI
 
 
 def csv_to_parquet(source, fire_id, batch_id, *, expected_patch_ids,
-                   expected_columns, client=None, on_stage=None,
+                   expected_columns, client=None, on_stage=None, product=None,
                    production_version=config.PRODUCTION_VERSION):
     """Validate completed raw CSV shards and upload one in-memory Parquet file.
 
@@ -137,9 +140,9 @@ def csv_to_parquet(source, fire_id, batch_id, *, expected_patch_ids,
 
     stage("STRUCTURAL_VALIDATION")
     prefix = production.raw_export_prefix(
-        source, fire_id, batch_id, production_version=production_version)
+        source, fire_id, batch_id, product=product, production_version=production_version)
     destination = production.parquet_path(
-        source, fire_id, batch_id, production_version=production_version)
+        source, fire_id, batch_id, product=product, production_version=production_version)
     expected = list(expected_patch_ids)
     validate_patch_table(pd.DataFrame({"patch_id": expected}))
     if not expected:

@@ -19,6 +19,13 @@ from wildfire_recovery_forecasting.validation import validate_patch_table, valid
 
 PATCH_AREA = PATCH_SIZE_M ** 2
 RASTER_FULL_AREA = "raster_full_area_m2"
+LANDSAT_PRODUCTS = {
+    "nbrpre": ("nbr_pre", "prefire_selected_year_count"),
+    "season1": ("nbr_1", "season1_obs_count"),
+    "nbr5": ("nbr_5",),
+    "season5_count": ("season5_obs_count",),
+    "nbrdrop": ("nbr_drop",),
+}
 MTBS_SEVERITY_SOURCE = "USFS/GTAC/MTBS/annual_burn_severity_mosaics/v1"
 SEVERITY_CLASSES = {
     "unburned_low": 1, "low": 2, "moderate": 3, "high": 4,
@@ -88,6 +95,25 @@ def summarize_area_sums(raw, names, *, support=None, fractions=()):
     return result
 
 
+def build_landsat_products(images, patches, *, reference_projection):
+    """Return five independent raw collections/columns, without fetching or joining.
+
+    images comes from landsat.build_fire_nbr using the requested exact patch
+    union; patches is that same EE patch collection. Pass the shared reference
+    projection used to build those images. Columns exclude the two identifier
+    columns automatically included by the exporter.
+    """
+    return {
+        product: {
+            "collection": build_area_sums(
+                {name: images[name] for name in group}, patches, reference_projection.atScale(30)),
+            "columns": [RASTER_FULL_AREA] + [
+                name + suffix for name in group for suffix in ("_sum", "_area")],
+        }
+        for product, group in LANDSAT_PRODUCTS.items()
+    }
+
+
 def reduce_landsat(images, patches, *, expected, reference_projection):
     """Retrieve five logical products independently and join exact patch populations.
 
@@ -99,11 +125,8 @@ def reduce_landsat(images, patches, *, expected, reference_projection):
     validate_patch_table(expected, fire_id=fire_id)
     names = ["nbr_pre", "nbr_1", "nbr_5", "nbr_drop",
              "prefire_selected_year_count", "season1_obs_count", "season5_obs_count"]
-    groups = [("nbr_pre", "prefire_selected_year_count"),
-              ("nbr_1", "season1_obs_count"), ("nbr_5",),
-              ("season5_obs_count",), ("nbr_drop",)]
     result = pd.DataFrame(expected[["patch_id", "fire_id"]]).copy()
-    for group in groups:
+    for group in LANDSAT_PRODUCTS.values():
         raw = area_sums({name: images[name] for name in group}, patches, reference_projection.atScale(30))
         part = summarize_area_sums(raw, group)
         validate_patch_table(part, expected_ids=expected.patch_id, fire_id=fire_id)

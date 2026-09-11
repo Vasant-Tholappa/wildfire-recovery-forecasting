@@ -64,6 +64,24 @@ class LandsatExecutionTests(ApiTestCase):
                     reductions.reduce_landsat(self.images, ee.FeatureCollection([]),
                         expected=self.patches, reference_projection=self.projection)
 
+    def test_async_products_match_sync_reduction_graphs(self):
+        collection = ee.FeatureCollection([])
+        graphs = []
+        def fetch(raw, columns):
+            graphs.append((raw.serialize(), columns))
+            names = [name.removesuffix("_sum") for name in columns if name.endswith("_sum")]
+            return self.raw_sums({name: self.images[name] for name in names}, collection, self.projection)
+        with patch.object(reductions, "fetch_patch_table", side_effect=fetch):
+            reductions.reduce_landsat(self.images, collection, expected=self.patches,
+                                       reference_projection=self.projection)
+        with patch.object(reductions, "fetch_patch_table", side_effect=AssertionError("Fetched")), \
+             patch.object(ee.data, "computeFeatures", side_effect=AssertionError("Network")):
+            products = reductions.build_landsat_products(self.images, collection,
+                                                         reference_projection=self.projection)
+        self.assertEqual(len(products), 5)
+        self.assertEqual(graphs, [(item["collection"].serialize(), item["columns"])
+                                 for item in products.values()])
+
     def test_exact_union_and_optional_batches_preserve_ids_and_reference(self):
         requested = self.patches.iloc[[2, 0, 1]]
         for size, expected_sizes in ((None, [3]), (2, [2, 1])):

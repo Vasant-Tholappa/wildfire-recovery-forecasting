@@ -13,7 +13,7 @@ def lookup_task_status(task_id):
 
 
 def advance_work_item(collection, columns, *, source, fire_id, batch_id,
-                      expected_patch_ids, client=None, task_status_lookup=None,
+                      expected_patch_ids, client=None, task_status_lookup=None, product=None,
                       retry_failed=False, production_version=config.PRODUCTION_VERSION):
     """Submit, wait, or finish one item without polling or automatic retries.
 
@@ -23,7 +23,7 @@ def advance_work_item(collection, columns, *, source, fire_id, batch_id,
     Status persistence/read failures propagate instead of pretending success.
     """
     key = dict(source=source, fire_id=fire_id, batch_id=batch_id,
-               production_version=production_version, client=client)
+               production_version=production_version, client=client, product=product)
     saved = persistence.read_status(**key)
     if saved and saved["status"] == "COMPLETE":
         return {"action": "SKIPPED_COMPLETE", "status": saved}
@@ -60,7 +60,7 @@ def advance_work_item(collection, columns, *, source, fire_id, batch_id,
             # Failed exports may have left shards. Do not mix old and new output.
             storage_client = client if client is not None else persistence.storage.Client(project=config.GCP_PROJECT)
             prefix = production.raw_export_prefix(source, fire_id, batch_id,
-                                                  production_version=production_version)
+                                                  production_version=production_version, product=product)
             if next(iter(storage_client.list_blobs(config.GCS_BUCKET, prefix=prefix)), None) is not None:
                 return {"action": "NEEDS_REVIEW", "status": saved,
                         "reason": "Failed export left raw-prefix objects; review before resubmission."}
@@ -75,7 +75,7 @@ def advance_work_item(collection, columns, *, source, fire_id, batch_id,
         write("RUNNING")  # Durable intent before the potentially ambiguous submission.
         try:
             task = exports.start_table_export(collection, columns, source=source,
-                fire_id=fire_id, batch_id=batch_id, production_version=production_version)
+                fire_id=fire_id, batch_id=batch_id, production_version=production_version, product=product)
             task_id = task.id
             if not task_id:
                 raise ValueError("Export returned no task ID; inspect EE before retrying")
@@ -97,7 +97,7 @@ def advance_work_item(collection, columns, *, source, fire_id, batch_id,
     try:
         result = persistence.csv_to_parquet(source, fire_id, batch_id,
             expected_patch_ids=expected_patch_ids, expected_columns=columns,
-            client=client, production_version=production_version, on_stage=progress)
+            client=client, production_version=production_version, on_stage=progress, product=product)
     except Exception as error:
         if persistence_error:
             raise

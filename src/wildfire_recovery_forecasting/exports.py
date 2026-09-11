@@ -8,7 +8,7 @@ from wildfire_recovery_forecasting import config, production
 from wildfire_recovery_forecasting.reductions import without_geometry
 
 
-def start_table_export(collection, columns, *, source, fire_id, batch_id,
+def start_table_export(collection, columns, *, source, fire_id, batch_id, product=None,
                        production_version=config.PRODUCTION_VERSION):
     """Start one GCS CSV task and return it immediately, without polling.
 
@@ -19,8 +19,10 @@ def start_table_export(collection, columns, *, source, fire_id, batch_id,
     Submission errors propagate to the caller. No retry or persistence occurs.
     """
     prefix = production.raw_export_prefix(
-        source, fire_id, batch_id, production_version=production_version)
+        source, fire_id, batch_id, product=product, production_version=production_version)
     description = f"{production_version}_{source}_{fire_id}_batch_{batch_id}"
+    if product is not None:
+        description += f"_product_{product}"
     if not re.fullmatch(r"[A-Za-z0-9_-]{1,100}", description):
         raise ValueError("Task description must be at most 100 letters, digits, underscores or hyphens")
     task = ee.batch.Export.table.toCloudStorage(

@@ -17,25 +17,26 @@ def _component(value: str) -> str:
     return value
 
 
-def _work_path(kind, source, fire_id, batch_id, production_version):
+def _work_path(kind, source, fire_id, batch_id, production_version, product=None):
     version, source, fire_id, batch_id = map(
         _component, (production_version, source, fire_id, batch_id))
-    return f"production/{version}/{kind}/{source}/fire_id={fire_id}/batch_{batch_id}"
+    product_path = "" if product is None else f"product={_component(product)}/"
+    return f"production/{version}/{kind}/{source}/{product_path}fire_id={fire_id}/batch_{batch_id}"
 
 
-def raw_export_prefix(source, fire_id, batch_id, *, production_version=PRODUCTION_VERSION):
+def raw_export_prefix(source, fire_id, batch_id, *, product=None, production_version=PRODUCTION_VERSION):
     """Return an extension-free object prefix for a work item's raw export."""
-    return _work_path("raw_exports", source, fire_id, batch_id, production_version)
+    return _work_path("raw_exports", source, fire_id, batch_id, production_version, product)
 
 
-def parquet_path(source, fire_id, batch_id, *, production_version=PRODUCTION_VERSION):
+def parquet_path(source, fire_id, batch_id, *, product=None, production_version=PRODUCTION_VERSION):
     """Return the work item's Parquet object name."""
-    return _work_path("parquet", source, fire_id, batch_id, production_version) + ".parquet"
+    return _work_path("parquet", source, fire_id, batch_id, production_version, product) + ".parquet"
 
 
-def status_path(source, fire_id, batch_id, *, production_version=PRODUCTION_VERSION):
+def status_path(source, fire_id, batch_id, *, product=None, production_version=PRODUCTION_VERSION):
     """Return the work item's JSON status object name."""
-    return _work_path("status", source, fire_id, batch_id, production_version) + ".json"
+    return _work_path("status", source, fire_id, batch_id, production_version, product) + ".json"
 
 
 def run_metadata_path(*, production_version=PRODUCTION_VERSION):

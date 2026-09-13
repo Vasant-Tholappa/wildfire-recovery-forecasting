@@ -7,7 +7,9 @@ import ee
 import geopandas as gpd
 import pandas as pd
 
-from wildfire_recovery_forecasting.config import GRID_CRS, MTBS_PRIOR_FIRE_LOOKBACK_YEARS
+from wildfire_recovery_forecasting.config import (
+    GRID_CRS, LCMS_PRIOR_DISTURBANCE_LOOKBACK_YEARS, MTBS_PRIOR_FIRE_LOOKBACK_YEARS,
+)
 from wildfire_recovery_forecasting.fire_catalog import MTBS_SOURCE, normalize_fire_geometry
 
 
@@ -120,7 +122,8 @@ def lcms_year_windows(fire) -> dict[str, list[int]]:
             or not 2015 <= year <= 2020 or season5 != year + 5):
         raise ValueError("Require manifest fire_year 2015–2020 and matching season5_year")
     return {
-        **{f"pre_{n}yr": list(range(year - n, year)) for n in (5, 7, 10)},
+        f"pre_{LCMS_PRIOR_DISTURBANCE_LOOKBACK_YEARS}yr": list(
+            range(year - LCMS_PRIOR_DISTURBANCE_LOOKBACK_YEARS, year)),
         "post_y_to_y5": list(range(year, season5 + 1)),
     }
 
@@ -136,12 +139,11 @@ def lcms_change_flags(change: ee.Image) -> dict[str, ee.Image]:
 
 
 def summarize_lcms_window(annual: dict, years: list[int], projection: ee.Projection) -> dict:
-    """Observed spatial unions and first observed years, with explicit coverage.
+    """Observed spatial unions within a predefined window, with explicit coverage.
 
     A union is 1 if detected in any observed year; 0 means no observed detection,
     and must be interpreted with valid_years/complete_coverage. No valid years
-    remains masked. First years are masked when no detection exists, and may
-    be later than the true first disturbance if earlier coverage is missing.
+    remains masked. No within-window disturbance-year output is constructed.
     complete_coverage is QA, not a patch eligibility threshold or pixel filter.
     """
     flags = {year: lcms_change_flags(annual[year]) for year in years}
@@ -156,12 +158,6 @@ def summarize_lcms_window(annual: dict, years: list[int], projection: ee.Project
         masks = [flags[year][category] for year in years]
         result[category] = (ee.ImageCollection.fromImages(masks).max()
                             .rename(category).setDefaultProjection(projection))
-        # Year constants otherwise infer incompatible year-specific integer ranges.
-        dated = [mask.multiply(0).add(year).updateMask(mask.eq(1)).rename("first_year").toInt16()
-                 for year, mask in zip(years, masks)]
-        result[f"{category}_first_year"] = (ee.ImageCollection.fromImages(dated).min()
-                                            .rename(f"{category}_first_year")
-                                            .setDefaultProjection(projection))
     return result
 
 
@@ -192,7 +188,6 @@ def build_lcms_history(fire, geometry: ee.Geometry) -> dict:
             counts[year].eq(1), ee.Image(candidates.first()).select("Change"), missing))
     return {
         "source_dataset": LCMS_SOURCE, "role": "retrospective_qa_only",
-        "timing_resolution": "annual; focal-year and Season-5 within-year ordering uncertain",
         "annual_image_counts": counts,
         "windows": {name: summarize_lcms_window(annual, window, projection)
                     for name, window in windows.items()},

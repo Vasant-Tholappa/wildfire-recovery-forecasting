@@ -85,14 +85,14 @@ class ReductionTests(unittest.TestCase):
         patches = local_patches()
         union = unary_union([box(0, 0, 60, 90), box(30, 0, 90, 90)])
         history = {"union_crs": "EPSG:5070", "windows": {
-            "prior_fire_fraction_5yr": {"union_geometry": union, "coverage_status": "unverified"}}}
+            "prior_fire_fraction_10yr": {"union_geometry": union, "coverage_status": "unverified"}}}
         result = reductions.reduce_wildfire_history(history, patches)
-        self.assertEqual(result.prior_fire_fraction_5yr.tolist(), [1, 0])
-        self.assertEqual(result.prior_fire_fraction_5yr_coverage_status.tolist(), ["unverified"] * 2)
+        self.assertEqual(result.prior_fire_fraction_10yr.tolist(), [1, 0])
+        self.assertEqual(result.prior_fire_fraction_10yr_coverage_status.tolist(), ["unverified"] * 2)
         validation.validate_measurements(result)
-        history["windows"]["prior_fire_fraction_5yr"]["union_geometry"] = box(0, 0, 135, 90)
+        history["windows"]["prior_fire_fraction_10yr"]["union_geometry"] = box(0, 0, 135, 90)
         partial = reductions.reduce_wildfire_history(history, patches)
-        self.assertEqual(partial.prior_fire_fraction_5yr.tolist(), [1, .5])
+        self.assertEqual(partial.prior_fire_fraction_10yr.tolist(), [1, .5])
 
 
 class JoinTests(unittest.TestCase):
@@ -134,7 +134,7 @@ class JoinTests(unittest.TestCase):
         fire = {"geometry": box(0, 0, 135, 90), "fire_id": "fire", "fire_size_acres": 3,
                 "ignition_date": ignition, **derive_fire_fields(ignition)}
         schema = pipeline.dataset_roles([])
-        columns = set(schema["predictors"]) | {schema["target"], "lcms_pre_5yr_clear_disturbance_fraction"}
+        columns = set(schema["predictors"]) | {schema["target"], "lcms_pre_10yr_clear_disturbance_fraction"}
         table = self.source[["patch_id", "fire_id"]].copy()
         for name in columns - {"fire_size_acres", "ignition_month"}:
             table[name] = .5
@@ -142,13 +142,26 @@ class JoinTests(unittest.TestCase):
             result = pipeline.run_fire_pipeline(fire, perimeter_crs="EPSG:5070", patch_ids=self.patches.patch_id)
         self.assertEqual(source.call_count, 1)
         self.assertEqual(len(result["table"]), 2)
-        self.assertIn("lcms_pre_5yr_clear_disturbance_fraction", result["roles"]["qa"])
+        self.assertIn("lcms_pre_10yr_clear_disturbance_fraction", result["roles"]["qa"])
         self.assertNotIn("nbr_1_mean", result["roles"]["early_predictors"])
         self.assertTrue(set(pipeline.daymet.HISTORICAL_BANDS) <= set(result["roles"]["early_predictors"]))
-        for leaked in ("nbr_5_mean", "lcms_pre_5yr_clear_disturbance_fraction"):
+        for leaked in ("nbr_5_mean", "lcms_pre_10yr_clear_disturbance_fraction"):
             roles = {**result["roles"], "predictors": result["roles"]["predictors"] + [leaked]}
             with self.assertRaises(ValueError):
                 validation.validate_dataset(result["table"], roles, expected_ids=self.patches.patch_id, fire_id="fire")
+
+    def test_obsolete_disturbance_columns_rejected(self):
+        table = self.source[["patch_id", "fire_id"]].copy()
+        roles = pipeline.dataset_roles([])
+        for name in set(roles["predictors"]) | {roles["target"]}:
+            table[name] = .5
+        for stale in ("prior_fire_fraction_5yr", "prior_fire_fraction_7yr_coverage_status",
+                      "lcms_pre_5yr_clear_disturbance_fraction", "lcms_pre_7yr_other_loss_fraction",
+                      "lcms_pre_10yr_clear_disturbance_first_year", "lcms_timing_resolution"):
+            broken = table.assign(**{stale: .5})
+            with self.subTest(column=stale), self.assertRaisesRegex(ValueError, "Obsolete disturbance"):
+                validation.validate_dataset(broken, pipeline.dataset_roles(broken),
+                                            expected_ids=self.patches.patch_id, fire_id="fire")
 
     def test_sample_is_deterministic_and_contains_full_and_boundary(self):
         grid = build_fire_grid(box(15, 15, 900, 900), "f", perimeter_crs="EPSG:5070")
@@ -258,12 +271,13 @@ class ReductionGraphTests(ApiTestCase):
         self.assertNotIn("Reducer.mean", graphs[0])
         self.assertNotEqual(projections[0], projections[-1])
 
-    def test_lcms_fraction_coverage_and_annual_timing_are_retained(self):
+    def test_lcms_two_reductions_keep_fraction_coverage_without_timing(self):
         categories = ["clear_disturbance", "other_loss"]
         images = {name: ee.Image(name) for name in categories + [
-            "valid_years", "complete_coverage", "clear_disturbance_first_year", "other_loss_first_year"]}
-        images["expected_years"] = 5
-        history = {"windows": {"pre_5yr": images}, "timing_resolution": "annual; uncertain ordering"}
+            "valid_years", "complete_coverage"]}
+        images["expected_years"] = 10
+        post = {**images, "expected_years": 6}
+        history = {"windows": {"pre_10yr": images, "post_y_to_y5": post}}
         def fake_area(values, patches, projection):
             data = {"patch_id": ["observed", "unavailable"], "fire_id": ["f", "f"],
                     reductions.RASTER_FULL_AREA: [8100., 8100.]}
@@ -274,20 +288,23 @@ class ReductionGraphTests(ApiTestCase):
                 data.update({name + "_sum": [total, 0 if qa else np.nan],
                              name + "_area": [8100, 8100 if qa else np.nan]})
             return pd.DataFrame(data)
-        def fake_dates(fc, columns):
-            self.assertIn("Reducer.min", fc.serialize())
-            return pd.DataFrame({"patch_id": ["observed", "unavailable"], "fire_id": ["f", "f"],
-                                 "clear_disturbance_first_year": [2014, np.nan],
-                                 "other_loss_first_year": [np.nan, np.nan]})
-        with patch.object(reductions, "area_sums", side_effect=fake_area), \
-                patch.object(reductions, "fetch_patch_table", side_effect=fake_dates):
+        with patch.object(reductions, "area_sums", side_effect=fake_area) as sums, \
+                patch.object(reductions, "fetch_patch_table", side_effect=AssertionError("Extra reduction")):
             result = reductions.reduce_lcms(history, ee.FeatureCollection([]))
-        self.assertAlmostEqual(result.lcms_pre_5yr_clear_disturbance_fraction.iloc[0], 1 / 9)
-        self.assertEqual(result.lcms_pre_5yr_other_loss_fraction.iloc[0], 0)
-        self.assertTrue(pd.isna(result.lcms_pre_5yr_other_loss_fraction.iloc[1]))
-        self.assertEqual(result.lcms_pre_5yr_valid_years_mean.tolist(), [4, 0])
-        self.assertEqual(result.lcms_pre_5yr_complete_coverage_fraction.tolist(), [0, 0])
-        self.assertEqual(result.lcms_timing_resolution.iloc[0], "annual; uncertain ordering")
+        self.assertEqual(sums.call_count, 2)
+        suffixes = {"clear_disturbance_fraction", "clear_disturbance_valid_fraction",
+                    "other_loss_fraction", "other_loss_valid_fraction",
+                    "complete_coverage_fraction", "complete_coverage_valid_fraction",
+                    "valid_years_mean", "valid_years_valid_fraction", "expected_years"}
+        self.assertEqual(set(result), {"patch_id", "fire_id"} | {
+            f"lcms_{window}_{suffix}" for window in history["windows"] for suffix in suffixes})
+        self.assertEqual(result.lcms_pre_10yr_expected_years.tolist(), [10, 10])
+        self.assertEqual(result.lcms_post_y_to_y5_expected_years.tolist(), [6, 6])
+        self.assertAlmostEqual(result.lcms_pre_10yr_clear_disturbance_fraction.iloc[0], 1 / 9)
+        self.assertEqual(result.lcms_pre_10yr_other_loss_fraction.iloc[0], 0)
+        self.assertTrue(pd.isna(result.lcms_pre_10yr_other_loss_fraction.iloc[1]))
+        self.assertEqual(result.lcms_pre_10yr_valid_years_mean.tolist(), [4, 0])
+        self.assertEqual(result.lcms_pre_10yr_complete_coverage_fraction.tolist(), [0, 0])
         validation.validate_measurements(result)
 
     def test_explicit_grid_area_and_no_measurement_unmask(self):

@@ -145,3 +145,27 @@ completion of the whole Landsat source.
 initial one-source/one-task assumption conflicted with Landsat's five products;
 we preserved the memory-safe independent graphs and extended production identity
 instead of recombining them.
+
+## Disturbance-QA scaling amendment for v1
+
+The current scientific contract retains only ten-year prior LCMS/MTBS QA.
+LCMS keeps pre-fire Y-10..Y-1 and post-fire Y..Y+5 union fractions and coverage, with no
+earliest-year outputs. MTBS keeps exact-date prior-fire overlap and unchanged
+reburn logic. Final exclusion thresholds still belong to Phase 3.5.
+
+The previous 5/7/10 sensitivity design was unnecessary overhead for auxiliary
+contamination screens in v1. Extent within these predefined windows is sufficient;
+LCMS is retrospective QA, not a primary predictor. This deliberate scaling/scope
+decision preserves the core prediction problem while reducing repeated work.
+See the rationale in the scientific contract. Earlier notebooks and pilot results
+are historical, not the current output schema.
+
+LCMS now has two independent raster reductions instead of eight (one extent/
+coverage reduction per window, no timing reductions). Total full-source raster
+boundaries per unsplit batch fall from 22 to 16; Landsat's five products are
+unchanged. MTBS history remains vector retrieval/local intersection work and
+adds no raster export. These boundary counts are not a finalized export task plan.
+Previously persisted LCMS/MTBS-history tables use an obsolete schema and must
+not be silently reused as current results; final dataset validation rejects the
+removed output columns. No existing cloud objects or production versions were
+changed by this amendment.

@@ -25,7 +25,7 @@ def events(rows):
 
 class HistoryTests(unittest.TestCase):
     def test_each_prior_boundary_and_same_year(self):
-        for years in [5, 7, 10]:
+        for years in [10]:
             start = FIRE["ignition_date"] - pd.DateOffset(years=years)
             source = events([(name, when, "Wildfire", box(0, 0, 90, 90)) for name, when in [
                 ("before", start - pd.Timedelta(milliseconds=1)), ("start", start),
@@ -50,7 +50,8 @@ class HistoryTests(unittest.TestCase):
             ("a", box(0, 0, 60, 90)), ("b", box(30, 0, 90, 90)),
         ]])
         result = d.history_from_mtbs(FIRE, source)
-        window = result["windows"]["prior_fire_fraction_5yr"]
+        self.assertEqual(set(result["windows"]), {"prior_fire_fraction_10yr", "reburn_fraction"})
+        window = result["windows"]["prior_fire_fraction_10yr"]
         self.assertEqual(result["union_crs"], "EPSG:5070")
         self.assertEqual(window["union_geometry"].intersection(box(0, 0, 90, 90)).area / 8100, 1)
         self.assertEqual(list(window["events"].geometry.to_wkb()), list(source.geometry.to_wkb()))
@@ -68,8 +69,8 @@ class HistoryTests(unittest.TestCase):
 
     def test_leap_anniversary_and_timezone(self):
         fire = dict(FIRE, ignition_date=pd.Timestamp("2020-02-29T08:00:00-04:00"))
-        window = d.wildfire_history_windows(fire)["prior_fire_fraction_5yr"]
-        self.assertEqual(window["start"], pd.Timestamp("2015-02-28T12:00:00Z"))
+        window = d.wildfire_history_windows(fire)["prior_fire_fraction_10yr"]
+        self.assertEqual(window["start"], pd.Timestamp("2010-02-28T12:00:00Z"))
 
     def test_bounded_retrieval_and_errors_propagate(self):
         records = events([]).set_crs(None, allow_override=True)
@@ -79,7 +80,7 @@ class HistoryTests(unittest.TestCase):
             result = d.build_wildfire_history(FIRE, geometry)
             ee.FeatureCollection.assert_called_once_with(d.MTBS_SOURCE)
             ee.FeatureCollection.return_value.filterBounds.assert_called_once_with(geometry)
-            self.assertEqual(len(result["windows"]), 4)
+            self.assertEqual(set(result["windows"]), {"prior_fire_fraction_10yr", "reburn_fraction"})
             ee.data.computeFeatures.side_effect = RuntimeError("Source unavailable")
             with self.assertRaises(RuntimeError):
                 d.build_wildfire_history(FIRE, geometry)

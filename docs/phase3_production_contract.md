@@ -93,17 +93,16 @@ It may retain:
 
 ### Prior wildfire
 
-For each patch, retain prior-wildfire overlap fractions for:
-
-- 5 years before the exact focal ignition date
-- 7 years before the exact focal ignition date
-- 10 years before the exact focal ignition date
+For each patch, retain only `prior_fire_fraction_10yr`: wildfire overlap during
+the ten years before the exact focal ignition date. Include the ten-year
+anniversary and exclude the focal ignition instant; preserve time of day.
 
 Only MTBS `Wildfire` events count.
 
 Exclude the focal wildfire by event/fire ID.
 
-Do not select the final 5/7/10-year eligibility rule until population-level QA.
+The ten-year lookback is locked. Phase 3.5 still selects the patch-level overlap
+threshold; no exclusion threshold is locked here.
 
 ### Reburn
 
@@ -128,7 +127,9 @@ Store `landfire_condition_year = 2014` and `landfire_version = "v1.4.0"` explici
 
 The v2 contract excludes 2013–2014 focal fires because a consistent, readily accessible pre-fire LANDFIRE vegetation product could not be obtained through the chosen production stack without disproportionate archive/version-specific ingestion work. Using LF2014/v1.4.0 for all retained fires trades temporal freshness for consistent coverage, taxonomy, reproducibility, and implementation simplicity. LCMS/MTBS disturbance QA remains responsible for identifying major intervening disturbances between the baseline and focal fire.
 
-Historical Daymet, MTBS, LCMS, and Landsat lookback windows are unchanged. The focal-population start year does not truncate historical source data: retained fires may require data before 2015, and the Landsat 7/8 transition at 2013 remains unchanged.
+That focal-population amendment did not change historical source lookbacks.
+The later disturbance-QA scaling amendment below retains only the ten-year
+MTBS/LCMS prior window; Daymet and Landsat lookbacks remain unchanged. The focal-population start year does not truncate historical source data: retained fires may require data before 2015, and the Landsat 7/8 transition at 2013 remains unchanged.
 
 Other rules:
 
@@ -213,13 +214,11 @@ Do not add research-grade exact Daymet native-cell intersection machinery unless
 
 Production exports must retain enough QA to make eligibility decisions without rerunning Earth Engine.
 
-### LCMS temporal QA
+### LCMS window and coverage QA
 
-Pre-fire LCMS QA retains annual competing-disturbance summaries for:
-
-- 5-year window: `fire_year - 5` through `fire_year - 1`
-- 7-year window: `fire_year - 7` through `fire_year - 1`
-- 10-year window: `fire_year - 10` through `fire_year - 1`
+Pre-fire LCMS QA retains one ten-year window: `fire_year - 10` through
+`fire_year - 1`. Summarize clear competing disturbance and Other Loss separately
+using spatial unions across the annual observations.
 
 Post-fire LCMS QA audits annual products from the focal `fire_year` through `fire_year + 5`, inclusive.
 
@@ -239,8 +238,6 @@ Each audited LCMS window must retain sufficient temporal/spatial coverage inform
 ### MTBS
 - valid severity coverage
 - non-mapping/invalid severity coverage as appropriate
-- 5-year prior-fire fraction
-- 7-year prior-fire fraction
 - 10-year prior-fire fraction
 - reburn fraction through Season 5
 
@@ -267,16 +264,36 @@ Each audited LCMS window must retain sufficient temporal/spatial coverage inform
 - preserve additional validity fields only if different climate feature families genuinely require them
 
 ### LCMS
-- pre-fire clear competing-disturbance fractions for the 5-, 7-, and 10-year lookback windows
-- pre-fire ambiguous/Other Loss fractions for the retained lookback windows
+- pre-fire clear competing-disturbance fraction for the ten-year lookback
+- pre-fire ambiguous/Other Loss fraction for the ten-year lookback
 - post-fire clear competing-disturbance fraction from focal fire year through Season 5
 - post-fire ambiguous/Other Loss fraction from focal fire year through Season 5
-- meaningful disturbance timing information
+- no earliest-disturbance-year or timing-minimum outputs; eligibility uses extent within each predefined window
 - LCMS valid coverage for each audited window, sufficient to distinguish complete observed absence from incomplete temporal/spatial coverage
 
 These QA fields do not automatically become model predictors.
 
 Final numerical eligibility thresholds are chosen later from population-level evidence.
+
+### Phase 3 scaling amendment: disturbance QA for v1
+
+The original 5/7/10-year sensitivity comparisons were retained to choose a
+lookback empirically. For v1, this is unnecessary methodological overhead for
+auxiliary QA screens. A single conservative ten-year prior-disturbance and
+prior-wildfire lookback is sufficient and easier to defend.
+
+LCMS is retrospective contamination QA, not a primary predictor. Eligibility
+uses disturbance extent/fraction within the predefined pre-fire and post-fire
+windows, so exact disturbance year within a window is not needed. Remove LCMS
+earliest-year calculations and outputs while retaining source/coverage QA and
+the annual-window uncertainty described above. MTBS still filters by exact
+ignition dates internally, and its reburn window is unchanged.
+
+This is a deliberate Phase 3 scaling/scope decision: it reduces repeated
+computation, code complexity and unnecessary output columns without weakening
+the core fifth-season NBR prediction problem. Phase 3.5 still determines how
+much disturbance or wildfire overlap excludes a patch. Historical Phase 2
+notebooks, notes and earlier pilot outputs remain records of the previous design.
 
 ## 12. Fire manifest
 
@@ -334,7 +351,7 @@ Do not finalize these in the production contract:
 - minimum forest fraction
 - minimum Landsat coverage/observation quality
 - minimum EVC/EVH coverage
-- final prior-fire lookback and threshold
+- final prior-fire overlap threshold (the ten-year lookback is already locked)
 - reburn exclusion threshold
 - LCMS competing-disturbance threshold
 

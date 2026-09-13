@@ -78,6 +78,12 @@ def validate_dataset(table, roles, *, expected_ids, fire_id):
     validate_measurements(table)
     if roles["target"] != "nbr_5_mean" or roles["target"] not in table:
         raise ValueError("NBR_5 target is missing or misidentified")
+    obsolete = [name for name in table if name.startswith((
+        "prior_fire_fraction_5yr", "prior_fire_fraction_7yr", "lcms_pre_5yr_", "lcms_pre_7yr_",
+    )) or (name.startswith("lcms_") and (
+        name.endswith("_first_year") or name == "lcms_timing_resolution"))]
+    if obsolete:
+        raise ValueError(f"Obsolete disturbance QA columns: {sorted(obsolete)}")
     primary, early, qa = map(set, (roles["predictors"], roles["early_predictors"], roles["qa"]))
     if not (primary | early | qa).issubset(table.columns):
         raise ValueError("Declared fields missing from dataset")

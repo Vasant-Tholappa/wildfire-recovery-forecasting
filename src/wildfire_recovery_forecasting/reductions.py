@@ -245,7 +245,7 @@ def reduce_wildfire_history(history, patches):
 
 
 def reduce_lcms(history, patches):
-    """Reduce observed union areas, first annual detections, and coverage per window."""
+    """Reduce observed union areas and coverage for pre-10 and post-Y..Y5 QA."""
     parts = []
     for window, images in history["windows"].items():
         prefix = "lcms_" + window + "_"
@@ -255,18 +255,11 @@ def reduce_lcms(history, patches):
         raw = area_sums({name: images[name] for name in names}, patches, projection)
         part = summarize_area_sums(raw, names, fractions=categories + ["complete_coverage"])
         part = part.rename(columns={name: prefix + name for name in part if name not in ("patch_id", "fire_id")})
-        timing = ee.Image.cat([images[name + "_first_year"] for name in categories]).reduceRegions(
-            collection=patches, reducer=ee.Reducer.min(), crs=projection, tileScale=4,
-        )
-        columns = [name + "_first_year" for name in categories]
-        dates = fetch_patch_table(timing, columns).rename(columns={name: prefix + name for name in columns})
-        part = part.merge(dates, on=["patch_id", "fire_id"], validate="one_to_one")
         part[prefix + "expected_years"] = images["expected_years"]
         parts.append(part)
     result = parts[0]
     for part in parts[1:]:
         result = result.merge(part, on=["patch_id", "fire_id"], validate="one_to_one")
-    result["lcms_timing_resolution"] = history["timing_resolution"]
     return result
 
 

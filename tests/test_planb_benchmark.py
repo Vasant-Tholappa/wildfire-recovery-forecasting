@@ -30,7 +30,7 @@ class BenchmarkTests(unittest.TestCase):
                                 "grid_row": rows, "grid_col": rows},
                                geometry=[box(n * 90, n * 90, (n+1)*90, (n+1)*90) for n in rows],
                                crs="EPSG:5070")
-        for tile in (60, 90):
+        for tile in (60, 90, 120, 150):
             first = b.select_batch(grid, tile)
             second = b.select_batch(grid.sample(frac=1, random_state=7), tile)
             self.assertEqual(first.patch_id.tolist(), second.patch_id.tolist())
@@ -44,7 +44,7 @@ class BenchmarkTests(unittest.TestCase):
         entries = b.product_entries(products)
         self.assertEqual(len(entries), 14)
         all_paths = set()
-        for tile in (60, 90):
+        for tile in (60, 90, 120, 150):
             batch = {"tile_side_cells": tile, "batch_id": "r0_c0"}
             for source, name, _ in entries:
                 item = {"source": source, "product": name}
@@ -55,8 +55,8 @@ class BenchmarkTests(unittest.TestCase):
                     self.assertIn(b.benchmark_version(tile), path)
                     self.assertEqual("product=" in path, name is not None)
                     all_paths.add(path)
-        self.assertEqual(len(all_paths), 84)
-        for tile in (10, 120, 150, True):
+        self.assertEqual(len(all_paths), 168)
+        for tile in (10, 180, 0, True):
             with self.assertRaises(ValueError):
                 b.benchmark_version(tile)
         products["landsat"].pop("nbr5")

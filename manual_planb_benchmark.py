@@ -60,8 +60,8 @@ def groups_diagnostics(table, expected_ids):
 
 
 def benchmark_version(tile):
-    if type(tile) is not int or tile not in (60, 90):
-        raise ValueError("Only tile sizes 60 and 90 are supported")
+    if type(tile) is not int or tile not in (60, 90, 120, 150):
+        raise ValueError("Only tile sizes 60, 90, 120 and 150 are supported")
     return f"{VERSION}_t{tile}"
 
 
@@ -224,7 +224,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("mode", choices=["submit", "check"])
     parser.add_argument("--manifest", type=Path, help="Existing local canonical fire manifest GeoParquet")
-    parser.add_argument("--tiles", type=int, nargs="+", choices=[60, 90], default=[60, 90])
+    parser.add_argument("--tiles", type=int, nargs="+", choices=[60, 90, 120, 150], default=[60, 90])
     parser.add_argument("--results", type=Path, default=RESULTS)
     args = parser.parse_args()
     if args.mode == "submit" and (args.manifest is None or not args.manifest.is_file()):

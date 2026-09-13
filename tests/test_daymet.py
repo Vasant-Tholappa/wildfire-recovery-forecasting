@@ -43,7 +43,8 @@ class DaymetTests(ApiTestCase):
                 row[name + "_area"] = 8100.
             return pd.DataFrame([row])
 
-        with patch.object(reductions, "area_sums", side_effect=area_sums), \
+        with patch.object(reductions, "build_area_sums", side_effect=area_sums), \
+             patch.object(reductions, "fetch_patch_table", side_effect=lambda fc, columns: fc), \
              patch.object(ee.ImageCollection, "fromImages", wraps=ee.ImageCollection.fromImages) as stack:
             reductions.reduce_daymet(images, ee.FeatureCollection([]))
         self.assertEqual(stack.call_count, 2)

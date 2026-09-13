@@ -10,7 +10,9 @@ The production data flow is:
     → converts it to canonical Parquet
     → writes the Parquet back to GCS
 
-The raw export unit is one `source × fire × spatial batch`.
+The raw export unit is one source + optional product + fire + spatial batch.
+Each multi-product source persists its products independently; single-product
+source paths remain unchanged.
 
 CSV is the raw Earth Engine export format because Earth Engine does not natively export these tables as Parquet. The raw CSV remains persisted in GCS so completed Earth Engine work is not lost if local Python is offline.
 
@@ -41,3 +43,16 @@ The following remain intentionally unproven and must be addressed in Phase 3.4.6
 3. Final production `tile_side_cells` / batch size, selected through live benchmarking.
 
 Phase 3.4.6 will also add production status/provenance metadata and resume/skip/failure handling before the population launch.
+## Current Plan B execution mapping
+
+The export-ready inventory is now 14 products per unsplit batch: Landsat 5,
+LANDFIRE 4, terrain 1, Daymet 2, LCMS 1 and focal MTBS severity 1.
+Only EVC forest/cover and LCMS pre/post window reductions were consolidated,
+using their respective shared grids and sum reducers. Scientific outputs,
+independent masks, valid-area denominators and deferred eligibility thresholds
+are unchanged. Daymet primary/coverage and EVT support/categories remain
+separate; the five Landsat graphs remain independent.
+
+See [the production execution contract](phase3_4_production_contract.md#plan-b-production-products)
+for product names and the builder API. These builders do not submit tasks or
+write GCS objects; controller and CSV-to-Parquet behavior are unchanged.

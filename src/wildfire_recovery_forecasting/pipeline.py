@@ -133,6 +133,37 @@ def dataset_roles(table):
     }
 
 
+def build_raster_products(fire, patches, *, reference_projection=None):
+    """Enumerate 14 independent raw products for one existing, unsplit batch.
+
+    Return source -> product -> {collection, columns, ...}. Single-product
+    sources use None, preserving legacy persistence paths. Each collection
+    can be passed independently to advance_work_item/start_table_export.
+    No fetches, exports, grid building or MTBS vector retrieval occur here.
+    LCMS also returns expected_years for local assembly (10 and 6).
+    """
+    validate_patches(patches, fire["fire_id"])
+    collection = patches_to_ee(patches)
+    exact_geometry = collection.geometry()
+    region = exact_geometry.bounds(maxError=1)
+    vegetation = landfire.build_landfire_images(fire, region)
+    if reference_projection is None:
+        reference_projection = ee.Image(ee.ImageCollection("LANDSAT/LC08/C02/T1_L2")
+            .filterBounds(exact_geometry)
+            .filterDate(f"{fire['season1_year']}-06-01", f"{fire['season1_year']}-10-01")
+            .sort("system:time_start").first()).select("SR_B5").projection()
+    nbr = landsat.build_fire_nbr(fire, exact_geometry, reference_projection=reference_projection)
+    return {
+        "landsat": reductions.build_landsat_products(nbr, collection, reference_projection=reference_projection),
+        "landfire": reductions.build_landfire_products(vegetation, collection),
+        "terrain": {None: reductions.build_terrain_product(
+            terrain.build_terrain_images(region), vegetation["forest_mask"], collection)},
+        "daymet": reductions.build_daymet_products(daymet.build_fire_climate_images(fire, region), collection),
+        "lcms": {None: reductions.build_lcms_product(disturbance.build_lcms_history(fire, region), collection)},
+        "mtbs_severity": {None: reductions.build_focal_severity_product(fire, collection)},
+    }
+
+
 def run_fire_pipeline(fire, *, perimeter_crs, patch_ids=None, on_source=None,
                       git_commit=None, manifest_version=None, landsat_batch_size=None):
     """Build a grid/subset, evaluate sources independently, and return a checked dataset.

@@ -253,10 +253,12 @@ class ReductionGraphTests(ApiTestCase):
             return pd.DataFrame(data)
         graphs = []
         def fake_fetch(fc, columns):
+            if isinstance(fc, pd.DataFrame):
+                return fc
             graphs.append(fc.serialize())
             return pd.DataFrame({"patch_id": ["p"], "fire_id": ["f"],
                                  "groups": [[{"class": 9000, "sum": 1800}, {"class": 100, "sum": 900}]]})
-        with patch.object(reductions, "area_sums", side_effect=fake_area), \
+        with patch.object(reductions, "build_area_sums", side_effect=fake_area), \
                 patch.object(reductions, "fetch_patch_table", side_effect=fake_fetch):
             result = reductions.reduce_landfire(images, ee.FeatureCollection([])).iloc[0]
         self.assertAlmostEqual(result.forest_fraction, 4500 / 8102.43)
@@ -271,7 +273,7 @@ class ReductionGraphTests(ApiTestCase):
         self.assertNotIn("Reducer.mean", graphs[0])
         self.assertNotEqual(projections[0], projections[-1])
 
-    def test_lcms_two_reductions_keep_fraction_coverage_without_timing(self):
+    def test_lcms_one_reduction_keeps_both_windows_without_timing(self):
         categories = ["clear_disturbance", "other_loss"]
         images = {name: ee.Image(name) for name in categories + [
             "valid_years", "complete_coverage"]}
@@ -282,16 +284,18 @@ class ReductionGraphTests(ApiTestCase):
             data = {"patch_id": ["observed", "unavailable"], "fire_id": ["f", "f"],
                     reductions.RASTER_FULL_AREA: [8100., 8100.]}
             for name in values:
+                base = name.removeprefix("lcms_pre_10yr_").removeprefix("lcms_post_y_to_y5_")
                 total = {"clear_disturbance": 900, "other_loss": 0,
-                         "complete_coverage": 0, "valid_years": 8100 * 4}[name]
-                qa = name in ("valid_years", "complete_coverage")
+                         "complete_coverage": 0, "valid_years": 8100 * 4}[base]
+                qa = base in ("valid_years", "complete_coverage")
                 data.update({name + "_sum": [total, 0 if qa else np.nan],
                              name + "_area": [8100, 8100 if qa else np.nan]})
             return pd.DataFrame(data)
-        with patch.object(reductions, "area_sums", side_effect=fake_area) as sums, \
-                patch.object(reductions, "fetch_patch_table", side_effect=AssertionError("Extra reduction")):
+        with patch.object(reductions, "build_area_sums", side_effect=fake_area) as sums, \
+                patch.object(reductions, "fetch_patch_table", side_effect=lambda fc, columns: fc) as fetch:
             result = reductions.reduce_lcms(history, ee.FeatureCollection([]))
-        self.assertEqual(sums.call_count, 2)
+        self.assertEqual(sums.call_count, 1)
+        self.assertEqual(fetch.call_count, 1)
         suffixes = {"clear_disturbance_fraction", "clear_disturbance_valid_fraction",
                     "other_loss_fraction", "other_loss_valid_fraction",
                     "complete_coverage_fraction", "complete_coverage_valid_fraction",
@@ -336,7 +340,8 @@ class ReductionGraphTests(ApiTestCase):
             for name in images:
                 values.update({name + "_sum": [0.], name + "_area": [8100.]})
             return pd.DataFrame(values)
-        with patch.object(reductions, "area_sums", side_effect=fake):
+        with patch.object(reductions, "build_area_sums", side_effect=fake), \
+                patch.object(reductions, "fetch_patch_table", side_effect=lambda fc, columns: fc):
             result = reductions.reduce_focal_severity({"fire_year": 2017}, ee.FeatureCollection([]))
         graph = captured["mtbs_high"].serialize()
         self.assertIn("mtbs_CONUS_2017", graph)

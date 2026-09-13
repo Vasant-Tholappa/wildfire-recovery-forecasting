@@ -161,11 +161,57 @@ See the rationale in the scientific contract. Earlier notebooks and pilot result
 are historical, not the current output schema.
 
 LCMS now has two independent raster reductions instead of eight (one extent/
-coverage reduction per window, no timing reductions). Total full-source raster
-boundaries per unsplit batch fall from 22 to 16; Landsat's five products are
+coverage reduction per window, no timing reductions). At this amendment, total full-source raster
+boundaries per unsplit batch fell from 22 to 16; Landsat's five products are
 unchanged. MTBS history remains vector retrieval/local intersection work and
 adds no raster export. These boundary counts are not a finalized export task plan.
 Previously persisted LCMS/MTBS-history tables use an obsolete schema and must
 not be silently reused as current results; final dataset validation rejects the
 removed output columns. No existing cloud objects or production versions were
 changed by this amendment.
+
+## Plan B production products
+
+Plan B is the implemented execution target: **14 independent raster-export
+products per unsplit spatial batch**. This is an execution optimization, not a
+scientific feature change or a choice of Phase 3.5 eligibility thresholds.
+
+| Source | Product identifiers | Count |
+| --- | --- | --- |
+| landsat | nbrpre, season1, nbr5, season5_count, nbrdrop | 5 |
+| landfire | evc, height, evt_support, evt_categories | 4 |
+| terrain | None (single product; existing path) | 1 |
+| daymet | primary, coverage | 2 |
+| lcms | None (single product; existing path) | 1 |
+| mtbs_severity | None (single product; existing path) | 1 |
+
+Forest and tree cover share the EVC source grid and sum reducer, so `evc`
+contains forest, tree_cover and support sums/valid areas in one reduction.
+Known nonforest pixels remain in EVC coverage. Each measurement mask and its
+valid-area/forest-support denominator remain independent. Height retains its
+EVH grid. EVT support and categorical groups retain separate reductions because
+their reducer semantics differ; EVT class IDs are never averaged.
+
+LCMS pre_10yr and post_y_to_y5 share the same LCMS reference grid and sum reducer.
+They now use one reduction with window-prefixed variables, separate masks and
+valid areas, and one unmasked same-grid full-area reference. Expected years
+remain local assembly metadata (10 and 6), exposed in the product descriptor.
+No disturbance timing fields return. Daymet primary and coverage remain two
+products pending runtime evidence. Terrain and severity stay consolidated as
+before. Landsat's five independent graphs remain unchanged.
+
+`pipeline.build_raster_products(fire, patches, reference_projection=...)` returns
+source -> product -> descriptor for an existing canonical batch, without fetching,
+submitting or rebuilding its grid. Descriptors contain `collection` and `columns`;
+LCMS also includes `expected_years`. Submit each collection independently using
+the existing controller's source/product identity, expected patch IDs and batch ID.
+Single-product sources use product=None, preserving their existing path layout.
+MTBS prior/reburn history remains separate vector/local work and is not enumerated.
+
+Synchronous reducers use the same raw builders and retain the existing analytical
+columns and local summarization. Persisted tables remain raw/intermediate sums,
+areas or EVT groups; export-ready does not mean already submitted or assembled.
+The new bundled raw schemas must not be confused with earlier intermediate
+outputs. Live numerical equivalence, memory/runtime and categorical CSV round-trip
+validation remain required before production; no live benchmark was part of this
+implementation.

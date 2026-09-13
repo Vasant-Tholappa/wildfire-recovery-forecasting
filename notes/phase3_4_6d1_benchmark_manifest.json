@@ -1,0 +1,295 @@
+{
+  "production_version": "phase3_benchmark_v1",
+  "fire_id": "AZ3340811121020190608",
+  "fire_name": "WOODBURY",
+  "candidate_tile_side_cells": [
+    10,
+    20,
+    30
+  ],
+  "selection": "Full tile nearest median grid row/column for each size; canonical grid reused once",
+  "tasks": [
+    {
+      "tile_side_cells": 10,
+      "batch_id": "r1412_c-1550",
+      "patch_count": 100,
+      "product": "nbrpre",
+      "action": "SUBMITTED",
+      "task_id": "XCNAKCO355UTKENSHCY6ZANO",
+      "submitted_at": "2026-09-12T16:02:42.209421+00:00",
+      "columns": [
+        "raster_full_area_m2",
+        "nbr_pre_sum",
+        "nbr_pre_area",
+        "prefire_selected_year_count_sum",
+        "prefire_selected_year_count_area"
+      ],
+      "raw_prefix": "gs://ee-wildfire-recovery-vasant-data/production/phase3_benchmark_v1/raw_exports/landsat/product=nbrpre/fire_id=AZ3340811121020190608/batch_r1412_c-1550",
+      "status_uri": "gs://ee-wildfire-recovery-vasant-data/production/phase3_benchmark_v1/status/landsat/product=nbrpre/fire_id=AZ3340811121020190608/batch_r1412_c-1550.json",
+      "parquet_uri": "gs://ee-wildfire-recovery-vasant-data/production/phase3_benchmark_v1/parquet/landsat/product=nbrpre/fire_id=AZ3340811121020190608/batch_r1412_c-1550.parquet",
+      "ee_state_at_submission_check": "READY"
+    },
+    {
+      "tile_side_cells": 10,
+      "batch_id": "r1412_c-1550",
+      "patch_count": 100,
+      "product": "season1",
+      "action": "SUBMITTED",
+      "task_id": "E6UHWCJIPM4JKOIXPLLJYNM7",
+      "submitted_at": "2026-09-12T16:02:44.020993+00:00",
+      "columns": [
+        "raster_full_area_m2",
+        "nbr_1_sum",
+        "nbr_1_area",
+        "season1_obs_count_sum",
+        "season1_obs_count_area"
+      ],
+      "raw_prefix": "gs://ee-wildfire-recovery-vasant-data/production/phase3_benchmark_v1/raw_exports/landsat/product=season1/fire_id=AZ3340811121020190608/batch_r1412_c-1550",
+      "status_uri": "gs://ee-wildfire-recovery-vasant-data/production/phase3_benchmark_v1/status/landsat/product=season1/fire_id=AZ3340811121020190608/batch_r1412_c-1550.json",
+      "parquet_uri": "gs://ee-wildfire-recovery-vasant-data/production/phase3_benchmark_v1/parquet/landsat/product=season1/fire_id=AZ3340811121020190608/batch_r1412_c-1550.parquet",
+      "ee_state_at_submission_check": "READY"
+    },
+    {
+      "tile_side_cells": 10,
+      "batch_id": "r1412_c-1550",
+      "patch_count": 100,
+      "product": "nbr5",
+      "action": "SUBMITTED",
+      "task_id": "2HZJPJ57KA2JCBBKY45KZI2V",
+      "submitted_at": "2026-09-12T16:02:45.077158+00:00",
+      "columns": [
+        "raster_full_area_m2",
+        "nbr_5_sum",
+        "nbr_5_area"
+      ],
+      "raw_prefix": "gs://ee-wildfire-recovery-vasant-data/production/phase3_benchmark_v1/raw_exports/landsat/product=nbr5/fire_id=AZ3340811121020190608/batch_r1412_c-1550",
+      "status_uri": "gs://ee-wildfire-recovery-vasant-data/production/phase3_benchmark_v1/status/landsat/product=nbr5/fire_id=AZ3340811121020190608/batch_r1412_c-1550.json",
+      "parquet_uri": "gs://ee-wildfire-recovery-vasant-data/production/phase3_benchmark_v1/parquet/landsat/product=nbr5/fire_id=AZ3340811121020190608/batch_r1412_c-1550.parquet",
+      "ee_state_at_submission_check": "READY"
+    },
+    {
+      "tile_side_cells": 10,
+      "batch_id": "r1412_c-1550",
+      "patch_count": 100,
+      "product": "season5_count",
+      "action": "SUBMITTED",
+      "task_id": "QREL6ZIBOL4TFZY3GE6GUUXQ",
+      "submitted_at": "2026-09-12T16:02:46.709900+00:00",
+      "columns": [
+        "raster_full_area_m2",
+        "season5_obs_count_sum",
+        "season5_obs_count_area"
+      ],
+      "raw_prefix": "gs://ee-wildfire-recovery-vasant-data/production/phase3_benchmark_v1/raw_exports/landsat/product=season5_count/fire_id=AZ3340811121020190608/batch_r1412_c-1550",
+      "status_uri": "gs://ee-wildfire-recovery-vasant-data/production/phase3_benchmark_v1/status/landsat/product=season5_count/fire_id=AZ3340811121020190608/batch_r1412_c-1550.json",
+      "parquet_uri": "gs://ee-wildfire-recovery-vasant-data/production/phase3_benchmark_v1/parquet/landsat/product=season5_count/fire_id=AZ3340811121020190608/batch_r1412_c-1550.parquet",
+      "ee_state_at_submission_check": "READY"
+    },
+    {
+      "tile_side_cells": 10,
+      "batch_id": "r1412_c-1550",
+      "patch_count": 100,
+      "product": "nbrdrop",
+      "action": "SUBMITTED",
+      "task_id": "5SUCFBSDITVFX7LUUE66TOS2",
+      "submitted_at": "2026-09-12T16:02:48.052198+00:00",
+      "columns": [
+        "raster_full_area_m2",
+        "nbr_drop_sum",
+        "nbr_drop_area"
+      ],
+      "raw_prefix": "gs://ee-wildfire-recovery-vasant-data/production/phase3_benchmark_v1/raw_exports/landsat/product=nbrdrop/fire_id=AZ3340811121020190608/batch_r1412_c-1550",
+      "status_uri": "gs://ee-wildfire-recovery-vasant-data/production/phase3_benchmark_v1/status/landsat/product=nbrdrop/fire_id=AZ3340811121020190608/batch_r1412_c-1550.json",
+      "parquet_uri": "gs://ee-wildfire-recovery-vasant-data/production/phase3_benchmark_v1/parquet/landsat/product=nbrdrop/fire_id=AZ3340811121020190608/batch_r1412_c-1550.parquet",
+      "ee_state_at_submission_check": "READY"
+    },
+    {
+      "tile_side_cells": 20,
+      "batch_id": "r706_c-775",
+      "patch_count": 400,
+      "product": "nbrpre",
+      "action": "SUBMITTED",
+      "task_id": "OLKAR54IQKHDEWYD24MTWPGF",
+      "submitted_at": "2026-09-12T16:02:51.486649+00:00",
+      "columns": [
+        "raster_full_area_m2",
+        "nbr_pre_sum",
+        "nbr_pre_area",
+        "prefire_selected_year_count_sum",
+        "prefire_selected_year_count_area"
+      ],
+      "raw_prefix": "gs://ee-wildfire-recovery-vasant-data/production/phase3_benchmark_v1/raw_exports/landsat/product=nbrpre/fire_id=AZ3340811121020190608/batch_r706_c-775",
+      "status_uri": "gs://ee-wildfire-recovery-vasant-data/production/phase3_benchmark_v1/status/landsat/product=nbrpre/fire_id=AZ3340811121020190608/batch_r706_c-775.json",
+      "parquet_uri": "gs://ee-wildfire-recovery-vasant-data/production/phase3_benchmark_v1/parquet/landsat/product=nbrpre/fire_id=AZ3340811121020190608/batch_r706_c-775.parquet",
+      "ee_state_at_submission_check": "READY"
+    },
+    {
+      "tile_side_cells": 20,
+      "batch_id": "r706_c-775",
+      "patch_count": 400,
+      "product": "season1",
+      "action": "SUBMITTED",
+      "task_id": "2IW6GUJTRHX6ZAVI7W7ZQ7FO",
+      "submitted_at": "2026-09-12T16:02:53.232408+00:00",
+      "columns": [
+        "raster_full_area_m2",
+        "nbr_1_sum",
+        "nbr_1_area",
+        "season1_obs_count_sum",
+        "season1_obs_count_area"
+      ],
+      "raw_prefix": "gs://ee-wildfire-recovery-vasant-data/production/phase3_benchmark_v1/raw_exports/landsat/product=season1/fire_id=AZ3340811121020190608/batch_r706_c-775",
+      "status_uri": "gs://ee-wildfire-recovery-vasant-data/production/phase3_benchmark_v1/status/landsat/product=season1/fire_id=AZ3340811121020190608/batch_r706_c-775.json",
+      "parquet_uri": "gs://ee-wildfire-recovery-vasant-data/production/phase3_benchmark_v1/parquet/landsat/product=season1/fire_id=AZ3340811121020190608/batch_r706_c-775.parquet",
+      "ee_state_at_submission_check": "READY"
+    },
+    {
+      "tile_side_cells": 20,
+      "batch_id": "r706_c-775",
+      "patch_count": 400,
+      "product": "nbr5",
+      "action": "SUBMITTED",
+      "task_id": "2ACZQFJJQVTQ6V5H7SXLDTUD",
+      "submitted_at": "2026-09-12T16:02:55.091056+00:00",
+      "columns": [
+        "raster_full_area_m2",
+        "nbr_5_sum",
+        "nbr_5_area"
+      ],
+      "raw_prefix": "gs://ee-wildfire-recovery-vasant-data/production/phase3_benchmark_v1/raw_exports/landsat/product=nbr5/fire_id=AZ3340811121020190608/batch_r706_c-775",
+      "status_uri": "gs://ee-wildfire-recovery-vasant-data/production/phase3_benchmark_v1/status/landsat/product=nbr5/fire_id=AZ3340811121020190608/batch_r706_c-775.json",
+      "parquet_uri": "gs://ee-wildfire-recovery-vasant-data/production/phase3_benchmark_v1/parquet/landsat/product=nbr5/fire_id=AZ3340811121020190608/batch_r706_c-775.parquet",
+      "ee_state_at_submission_check": "READY"
+    },
+    {
+      "tile_side_cells": 20,
+      "batch_id": "r706_c-775",
+      "patch_count": 400,
+      "product": "season5_count",
+      "action": "SUBMITTED",
+      "task_id": "4KAQZC3DSMSVSAD2JRD6K6PG",
+      "submitted_at": "2026-09-12T16:02:56.541799+00:00",
+      "columns": [
+        "raster_full_area_m2",
+        "season5_obs_count_sum",
+        "season5_obs_count_area"
+      ],
+      "raw_prefix": "gs://ee-wildfire-recovery-vasant-data/production/phase3_benchmark_v1/raw_exports/landsat/product=season5_count/fire_id=AZ3340811121020190608/batch_r706_c-775",
+      "status_uri": "gs://ee-wildfire-recovery-vasant-data/production/phase3_benchmark_v1/status/landsat/product=season5_count/fire_id=AZ3340811121020190608/batch_r706_c-775.json",
+      "parquet_uri": "gs://ee-wildfire-recovery-vasant-data/production/phase3_benchmark_v1/parquet/landsat/product=season5_count/fire_id=AZ3340811121020190608/batch_r706_c-775.parquet",
+      "ee_state_at_submission_check": "READY"
+    },
+    {
+      "tile_side_cells": 20,
+      "batch_id": "r706_c-775",
+      "patch_count": 400,
+      "product": "nbrdrop",
+      "action": "SUBMITTED",
+      "task_id": "BNJVXY5AGESXY742HNYNJXFZ",
+      "submitted_at": "2026-09-12T16:02:58.452314+00:00",
+      "columns": [
+        "raster_full_area_m2",
+        "nbr_drop_sum",
+        "nbr_drop_area"
+      ],
+      "raw_prefix": "gs://ee-wildfire-recovery-vasant-data/production/phase3_benchmark_v1/raw_exports/landsat/product=nbrdrop/fire_id=AZ3340811121020190608/batch_r706_c-775",
+      "status_uri": "gs://ee-wildfire-recovery-vasant-data/production/phase3_benchmark_v1/status/landsat/product=nbrdrop/fire_id=AZ3340811121020190608/batch_r706_c-775.json",
+      "parquet_uri": "gs://ee-wildfire-recovery-vasant-data/production/phase3_benchmark_v1/parquet/landsat/product=nbrdrop/fire_id=AZ3340811121020190608/batch_r706_c-775.parquet",
+      "ee_state_at_submission_check": "READY"
+    },
+    {
+      "tile_side_cells": 30,
+      "batch_id": "r470_c-517",
+      "patch_count": 900,
+      "product": "nbrpre",
+      "action": "SUBMITTED",
+      "task_id": "THSDIVAPMTPRD6F5TWABVZAL",
+      "submitted_at": "2026-09-12T16:03:02.615419+00:00",
+      "columns": [
+        "raster_full_area_m2",
+        "nbr_pre_sum",
+        "nbr_pre_area",
+        "prefire_selected_year_count_sum",
+        "prefire_selected_year_count_area"
+      ],
+      "raw_prefix": "gs://ee-wildfire-recovery-vasant-data/production/phase3_benchmark_v1/raw_exports/landsat/product=nbrpre/fire_id=AZ3340811121020190608/batch_r470_c-517",
+      "status_uri": "gs://ee-wildfire-recovery-vasant-data/production/phase3_benchmark_v1/status/landsat/product=nbrpre/fire_id=AZ3340811121020190608/batch_r470_c-517.json",
+      "parquet_uri": "gs://ee-wildfire-recovery-vasant-data/production/phase3_benchmark_v1/parquet/landsat/product=nbrpre/fire_id=AZ3340811121020190608/batch_r470_c-517.parquet",
+      "ee_state_at_submission_check": "READY"
+    },
+    {
+      "tile_side_cells": 30,
+      "batch_id": "r470_c-517",
+      "patch_count": 900,
+      "product": "season1",
+      "action": "SUBMITTED",
+      "task_id": "ETL67LG65LTWTVEFB5QGD5NF",
+      "submitted_at": "2026-09-12T16:03:04.986436+00:00",
+      "columns": [
+        "raster_full_area_m2",
+        "nbr_1_sum",
+        "nbr_1_area",
+        "season1_obs_count_sum",
+        "season1_obs_count_area"
+      ],
+      "raw_prefix": "gs://ee-wildfire-recovery-vasant-data/production/phase3_benchmark_v1/raw_exports/landsat/product=season1/fire_id=AZ3340811121020190608/batch_r470_c-517",
+      "status_uri": "gs://ee-wildfire-recovery-vasant-data/production/phase3_benchmark_v1/status/landsat/product=season1/fire_id=AZ3340811121020190608/batch_r470_c-517.json",
+      "parquet_uri": "gs://ee-wildfire-recovery-vasant-data/production/phase3_benchmark_v1/parquet/landsat/product=season1/fire_id=AZ3340811121020190608/batch_r470_c-517.parquet",
+      "ee_state_at_submission_check": "READY"
+    },
+    {
+      "tile_side_cells": 30,
+      "batch_id": "r470_c-517",
+      "patch_count": 900,
+      "product": "nbr5",
+      "action": "SUBMITTED",
+      "task_id": "5BDDMIC4V64GK33N7OJHBAYE",
+      "submitted_at": "2026-09-12T16:03:07.407086+00:00",
+      "columns": [
+        "raster_full_area_m2",
+        "nbr_5_sum",
+        "nbr_5_area"
+      ],
+      "raw_prefix": "gs://ee-wildfire-recovery-vasant-data/production/phase3_benchmark_v1/raw_exports/landsat/product=nbr5/fire_id=AZ3340811121020190608/batch_r470_c-517",
+      "status_uri": "gs://ee-wildfire-recovery-vasant-data/production/phase3_benchmark_v1/status/landsat/product=nbr5/fire_id=AZ3340811121020190608/batch_r470_c-517.json",
+      "parquet_uri": "gs://ee-wildfire-recovery-vasant-data/production/phase3_benchmark_v1/parquet/landsat/product=nbr5/fire_id=AZ3340811121020190608/batch_r470_c-517.parquet",
+      "ee_state_at_submission_check": "READY"
+    },
+    {
+      "tile_side_cells": 30,
+      "batch_id": "r470_c-517",
+      "patch_count": 900,
+      "product": "season5_count",
+      "action": "SUBMITTED",
+      "task_id": "AEHVHG3VMDUDKD3FJ44X4UTZ",
+      "submitted_at": "2026-09-12T16:03:10.306775+00:00",
+      "columns": [
+        "raster_full_area_m2",
+        "season5_obs_count_sum",
+        "season5_obs_count_area"
+      ],
+      "raw_prefix": "gs://ee-wildfire-recovery-vasant-data/production/phase3_benchmark_v1/raw_exports/landsat/product=season5_count/fire_id=AZ3340811121020190608/batch_r470_c-517",
+      "status_uri": "gs://ee-wildfire-recovery-vasant-data/production/phase3_benchmark_v1/status/landsat/product=season5_count/fire_id=AZ3340811121020190608/batch_r470_c-517.json",
+      "parquet_uri": "gs://ee-wildfire-recovery-vasant-data/production/phase3_benchmark_v1/parquet/landsat/product=season5_count/fire_id=AZ3340811121020190608/batch_r470_c-517.parquet",
+      "ee_state_at_submission_check": "READY"
+    },
+    {
+      "tile_side_cells": 30,
+      "batch_id": "r470_c-517",
+      "patch_count": 900,
+      "product": "nbrdrop",
+      "action": "SUBMITTED",
+      "task_id": "LXJW5PPV2FG3IMVKXL3LD6XF",
+      "submitted_at": "2026-09-12T16:03:13.049019+00:00",
+      "columns": [
+        "raster_full_area_m2",
+        "nbr_drop_sum",
+        "nbr_drop_area"
+      ],
+      "raw_prefix": "gs://ee-wildfire-recovery-vasant-data/production/phase3_benchmark_v1/raw_exports/landsat/product=nbrdrop/fire_id=AZ3340811121020190608/batch_r470_c-517",
+      "status_uri": "gs://ee-wildfire-recovery-vasant-data/production/phase3_benchmark_v1/status/landsat/product=nbrdrop/fire_id=AZ3340811121020190608/batch_r470_c-517.json",
+      "parquet_uri": "gs://ee-wildfire-recovery-vasant-data/production/phase3_benchmark_v1/parquet/landsat/product=nbrdrop/fire_id=AZ3340811121020190608/batch_r470_c-517.parquet",
+      "ee_state_at_submission_check": "READY"
+    }
+  ]
+}

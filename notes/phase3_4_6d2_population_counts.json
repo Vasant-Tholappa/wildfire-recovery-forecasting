@@ -1,0 +1,24 @@
+{
+  "fire_count": 1904,
+  "method": "Positive-area intersections with globally aligned EPSG:5070 square tiles; equivalent to nonempty retained-patch batches",
+  "counts": {
+    "10": {
+      "spatial_batches": 200208,
+      "landsat_tasks": 1001040,
+      "per_fire_median": 36.0,
+      "per_fire_max": 5755
+    },
+    "20": {
+      "spatial_batches": 62258,
+      "landsat_tasks": 311290,
+      "per_fire_median": 13.0,
+      "per_fire_max": 1524
+    },
+    "30": {
+      "spatial_batches": 33285,
+      "landsat_tasks": 166425,
+      "per_fire_median": 8.0,
+      "per_fire_max": 709
+    }
+  }
+}

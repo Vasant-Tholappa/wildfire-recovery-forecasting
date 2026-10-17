@@ -7,9 +7,11 @@ from pathlib import Path
 
 import geopandas as gpd
 import numpy as np
+import pandas as pd
 import shapely
 
 from wildfire_recovery_forecasting.config import GRID_CRS, PATCH_SIZE_M
+from wildfire_recovery_forecasting.grid import assign_spatial_batches, build_fire_grid
 
 
 REGRESSION_COUNTS = {10: 200208, 20: 62258, 30: 33285}
@@ -17,6 +19,78 @@ METHOD = (
     "Positive-area intersections with globally aligned EPSG:5070 square tiles; "
     "equivalent to nonempty retained-patch batches"
 )
+
+
+def batch_patch_counts_reference(manifest):
+    """Slow canonical implementation retained as an equivalence oracle."""
+    tables = []
+    for fire in manifest.itertuples():
+        patches = build_fire_grid(fire.geometry, fire.fire_id, perimeter_crs=manifest.crs)
+        batches = assign_spatial_batches(patches, tile_side_cells=120)
+        tables.append(batches.groupby(["fire_id", "batch_id"]).size()
+                      .rename("patch_count").reset_index())
+        print(f"{fire.fire_id}: {len(patches)} patches, {len(tables[-1])} batches", flush=True)
+    return pd.concat(tables, ignore_index=True).sort_values(
+        ["fire_id", "batch_id"], ignore_index=True
+    )
+
+
+def batch_patch_counts(manifest):
+    """Exact counts using prepared predicates and vectorized boundary overlays.
+
+    Work on at most one 120x120 tile at a time. Covered squares necessarily
+    have positive area; only intersecting, not-covered squares need overlays.
+    Intersect against the original projected perimeter, never a clipped version.
+    """
+    records = []
+    for fire in manifest.to_crs(GRID_CRS).itertuples():
+        geom = fire.geometry
+        if (geom.geom_type not in ("Polygon", "MultiPolygon") or geom.is_empty
+                or not geom.is_valid or not np.isfinite(geom.bounds).all()):
+            raise ValueError("Require a valid nonempty projected Polygon/MultiPolygon")
+        shapely.prepare(geom)
+        x0, y0, x1, y1 = geom.bounds
+        c0, c1 = math.floor(x0 / PATCH_SIZE_M), math.ceil(x1 / PATCH_SIZE_M)
+        r0, r1 = math.floor(y0 / PATCH_SIZE_M), math.ceil(y1 / PATCH_SIZE_M)
+        fire_patches = fire_batches = 0
+        for tr in range(r0 // 120, (r1 - 1) // 120 + 1):
+            for tc in range(c0 // 120, (c1 - 1) // 120 + 1):
+                tile = shapely.box(tc * 120 * PATCH_SIZE_M, tr * 120 * PATCH_SIZE_M,
+                                   (tc + 1) * 120 * PATCH_SIZE_M,
+                                   (tr + 1) * 120 * PATCH_SIZE_M)
+                if not shapely.intersects(geom, tile):
+                    continue
+                if shapely.covers(geom, tile):
+                    count = 120**2
+                else:
+                    cols, rows = np.meshgrid(
+                        np.arange(max(c0, tc * 120), min(c1, (tc + 1) * 120)),
+                        np.arange(max(r0, tr * 120), min(r1, (tr + 1) * 120)),
+                    )
+                    cells = shapely.box(cols.ravel() * PATCH_SIZE_M, rows.ravel() * PATCH_SIZE_M,
+                                        (cols.ravel() + 1) * PATCH_SIZE_M,
+                                        (rows.ravel() + 1) * PATCH_SIZE_M)
+                    covered = shapely.covers(geom, cells)
+                    boundary = cells[~covered & shapely.intersects(geom, cells)]
+                    count = int(covered.sum() + np.count_nonzero(
+                        shapely.area(shapely.intersection(boundary, geom)) > 0))
+                if count:
+                    records.append((fire.fire_id, f"r{tr}_c{tc}", count))
+                    fire_patches += count
+                    fire_batches += 1
+        print(f"{fire.fire_id}: {fire_patches} patches, {fire_batches} batches", flush=True)
+    return pd.DataFrame(records, columns=["fire_id", "batch_id", "patch_count"]).sort_values(
+        ["fire_id", "batch_id"], ignore_index=True)
+
+
+def write_batch_patch_counts(table, path):
+    """Persist only a complete tile-120 population with the known batch total."""
+    if (len(table) != 6301 or table[["fire_id", "batch_id", "patch_count"]].isna().any().any()
+            or table.duplicated(["fire_id", "batch_id"]).any()
+            or not table.patch_count.between(1, 120**2).all()):
+        raise ValueError("Expected exactly 6,301 unique nonempty tile-120 batches")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    table.to_parquet(path, index=False)
 
 
 def count_tiles(manifest, tile_side_cells):
@@ -73,6 +147,8 @@ def main():
                         default=[90, 120, 150])
     parser.add_argument("--output", type=Path,
                         default=Path("data/processed/phase3_planb_population_counts.json"))
+    parser.add_argument("--batch-counts-output", type=Path,
+                        help="Instead of aggregate counts, write tile-120 patch counts to Parquet")
     args = parser.parse_args()
     manifest = gpd.read_parquet(args.manifest)
     if (len(manifest) != 1904 or "fire_id" not in manifest
@@ -80,6 +156,10 @@ def main():
             or manifest.crs is None or manifest.geometry.isna().any()
             or manifest.geometry.is_empty.any() or not manifest.geometry.is_valid.all()):
         raise ValueError("Expected 1,904 unique fires with valid, nonempty geometry and CRS")
+    if args.batch_counts_output is not None:
+        write_batch_patch_counts(batch_patch_counts(manifest), args.batch_counts_output)
+        print(args.batch_counts_output.resolve())
+        return
     results = verified_counts(manifest, args.tiles)
     results["manifest_path"] = str(args.manifest.resolve())
     args.output.parent.mkdir(parents=True, exist_ok=True)

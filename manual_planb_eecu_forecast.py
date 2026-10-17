@@ -1,5 +1,6 @@
 """Local occupancy-weighted EECU scenarios; no EE/GCS access or production changes."""
 
+import argparse
 import json
 from pathlib import Path
 
@@ -29,6 +30,10 @@ def scenarios(n, y):
 
 
 def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--combined-daymet", action="store_true",
+                        help="Replace only Daymet with the validated combined benchmark")
+    args = parser.parse_args()
     benchmark = json.loads((DATA / "planb_benchmark_results.json").read_text())
     population = pd.read_parquet(DATA / "phase3_planb_tile120_batch_patch_counts.parquet")
     assert len(population) == 6301 and population.patch_count.sum() == 15275928
@@ -49,6 +54,26 @@ def main():
         measured[tile] = values
     assert all(set(v) == set(measured["60"]) for v in measured.values())
     n = population.patch_count.to_numpy(dtype=float)
+    baseline_hours = {
+        scenario: float(sum(scenarios(n, np.array([v[key] for v in measured.values()]))[scenario].sum()
+                            for key in measured["60"]) / 3600)
+        for scenario in ("piecewise_power", "small_batch_floor")
+    }
+    if args.combined_daymet:
+        combined = json.loads((DATA / "daymet_combined_benchmark_results.json").read_text())
+        for tile, expected_n in zip(("60", "90", "120"), X):
+            batch = combined["batches"][tile]
+            assert batch["patch_count"] == expected_n
+            assert batch["expected_patch_ids"] == benchmark["batches"][tile]["expected_patch_ids"]
+            assert batch["comparison"]["equivalent"] and batch["comparison"]["null_patterns_identical"]
+            product, = batch["products"]
+            assert (product["source"], product["product"]) == ("daymet", "combined")
+            assert product["ee_task"]["state"] == "COMPLETED"
+            cost = float(product["ee_task"]["batch_eecu_usage_seconds"])
+            assert cost > 0
+            del measured[tile]["daymet/primary"]
+            del measured[tile]["daymet/coverage"]
+            measured[tile]["daymet/combined"] = cost
     totals = np.array([sum(v.values()) for v in measured.values()])
     aggregate_scenarios = scenarios(n, totals)
     product_rows = []
@@ -63,7 +88,8 @@ def main():
         product_rows.append({"product": key, "measured_seconds": y.tolist(),
                              "central_hours": predictions["piecewise_power"].sum() / 3600,
                              "planning_hours": predictions["small_batch_floor"].sum() / 3600})
-    assert np.all(upper >= central - 1e-8)
+    # Linear interpolation is not a pointwise upper bound for concave segments.
+    # Keep the original planning scenario; report its population sum separately.
     # Both interpolants reproduce all three measurements for each product.
     for values in zip(*(v.values() for v in measured.values())):
         np.testing.assert_allclose(scenarios(X, np.array(values))["piecewise_power"], values)
@@ -84,6 +110,8 @@ def main():
         "aggregate_model_hours": {k: float(v.sum() / 3600) for k, v in aggregate_scenarios.items()},
         "central_hours": float(central.sum() / 3600),
         "planning_hours": float(upper.sum() / 3600),
+        "baseline_hours": baseline_hours,
+        "combined_daymet": args.combined_daymet,
         "below_smallest_benchmark_batches": int((n < 3600).sum()),
         "below_smallest_benchmark_patch_share": float(n[n < 3600].sum() / n.sum()),
         "central_hours_at_or_above_3600": float(central[n >= 3600].sum() / 3600),
@@ -98,8 +126,9 @@ def main():
             "Scenarios are not confidence intervals or guaranteed upper/lower bounds.",
         ],
     }
-    population.to_csv(DATA / "phase3_planb_eecu_forecast_batches.csv", index=False)
-    (DATA / "phase3_planb_eecu_forecast.json").write_text(json.dumps(result, indent=2) + "\n")
+    stem = "phase3_planb_eecu_forecast" + ("_combined_daymet" if args.combined_daymet else "")
+    population.to_csv(DATA / f"{stem}_batches.csv", index=False)
+    (DATA / f"{stem}.json").write_text(json.dumps(result, indent=2) + "\n")
     print(json.dumps(result, indent=2))
 
 

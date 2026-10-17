@@ -223,7 +223,7 @@ def reduce_terrain(images, forest, patches):
         columns="eastness_valid_fraction")
 
 
-def build_daymet_products(images, patches):
+def daymet_area_inputs(images):
     """Associate native ~1 km temporal surfaces using Phase 2's 30 m area sampling.
 
     This samples the piecewise native climate surface geographically; it does
@@ -235,7 +235,6 @@ def build_daymet_products(images, patches):
     values = {name: images["primary"].select(name) for name in names}
     # Explicit geographic association grid, after all native temporal aggregation.
     projection = ee.Projection(GRID_CRS).atScale(30)
-    primary = build_area_product(values, patches, projection)
     qa = {}
     for period in ("pre_s1", "s1"):
         history = images["historical_" + period]
@@ -250,7 +249,14 @@ def build_daymet_products(images, patches):
         for band in daymet.SUMMARY_BANDS:
             qa[f"daymet_hist_{period}_{band}_daily_coverage"] = minimum.select(band)
             qa[f"daymet_{period}_{band}_valid_days"] = images[period]["valid_days"].select(band)
-    return {"primary": primary, "coverage": build_area_product(qa, patches, projection)}
+    return values, qa, projection
+
+
+def build_daymet_products(images, patches):
+    """Keep production primary and coverage as two independent reductions."""
+    values, qa, projection = daymet_area_inputs(images)
+    return {"primary": build_area_product(values, patches, projection),
+            "coverage": build_area_product(qa, patches, projection)}
 
 
 def reduce_daymet(images, patches):

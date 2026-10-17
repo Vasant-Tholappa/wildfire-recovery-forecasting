@@ -159,11 +159,11 @@ def submit(args, results, client):
             print(source, name, item.get("task_id"), item.get("harness_error", item.get("action")), flush=True)
 
 
-def collect(args, results, client):
+def collect(args, results, client, *, identity_fn=identity, paths_fn=paths):
     for batch in results["batches"].values():
         for item in batch["products"]:
             try:
-                key = identity(batch, item)
+                key = identity_fn(batch, item)
                 saved = persistence.read_status(**key, client=client)
                 if not saved or not saved.get("ee_task_id"):
                     raise ValueError("Missing persisted task ID; check mode will never submit")
@@ -191,7 +191,7 @@ def collect(args, results, client):
                         saved["status"], "WAITING")
                 item["status"] = saved
                 item["row_count"] = saved.get("row_count")
-                prefix = paths(batch, item)["raw_prefix"]
+                prefix = paths_fn(batch, item)["raw_prefix"]
                 pattern = re.compile(re.escape(prefix) + r"(?:-\d+(?:-\d+)*)?\.csv")
                 raw = [blob for blob in client.list_blobs(config.GCS_BUCKET, prefix=prefix)
                        if pattern.fullmatch(blob.name)]
@@ -199,7 +199,7 @@ def collect(args, results, client):
                 item["raw_shard_count"] = len(raw)
                 item["raw_size_bytes"] = sum(blob.size or 0 for blob in raw)
                 if saved["status"] == "COMPLETE":
-                    blob = client.bucket(config.GCS_BUCKET).get_blob(paths(batch, item)["parquet_path"])
+                    blob = client.bucket(config.GCS_BUCKET).get_blob(paths_fn(batch, item)["parquet_path"])
                     if blob is None:
                         raise ValueError("COMPLETE status but Parquet object is missing")
                     table = pd.read_parquet(BytesIO(blob.download_as_bytes()))

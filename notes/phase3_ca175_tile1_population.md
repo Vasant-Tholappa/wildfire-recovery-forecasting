@@ -1,5 +1,54 @@
 # Compact California population: phase3_ca175_tile1_v1
 
+## Automatic bounded continuation (Windows PowerShell)
+
+From the repository root, after manually checking quota/billing:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\run_population_continuous.ps1 -MaxHours 12 -MaxNew 400 -SessionMinutes 15 -NoProgressMinutes 120
+```
+
+This runs the existing controller sequentially in 15-minute slices, always with
+max-active=4, and automatically continues until all 2,100 products are persisted,
+12 total wall-clock hours or 400 total new status records have been reached, or an
+error/intervention/no-progress stop occurs. Durable new status intents count
+conservatively toward the total cap, even if submission was ambiguous. No retries.
+No overlapping wrappers (exclusive local lock) or controllers (existing driver
+lock) are permitted. Do not run a manual submitting controller alongside it.
+
+The total limits span all child sessions in this wrapper invocation. Restarting
+the wrapper is an explicit operator authorization for a fresh allowance, after
+reviewing usage. Existing persisted work is skipped/resumed, not resubmitted.
+Limits are checked between synchronous operations: an in-flight preparation,
+network call or conversion may run past a time boundary. They are not hard task
+timeouts. The no-progress limit is checked at slice boundaries, allowing up to one
+slice plus in-flight work before stopping. Remote tasks continue after a stop.
+
+Logs are `data/processed/phase3_ca175_tile1_v1_unattended_*.log`; console output
+shows the wrapper PID and completed/running/failed/pending/new counts between
+slices. Native session output, including throughput, is appended after each
+slice. In another terminal:
+
+```powershell
+uv run --offline python manual_population.py status
+Get-Content (Get-ChildItem .\data\processed\phase3_ca175_tile1_v1_unattended_*.log | Sort-Object LastWriteTime | Select-Object -Last 1).FullName -Tail 30
+Get-Process -Id <PID-shown-by-wrapper>
+```
+
+Press Ctrl+C in the wrapper terminal to stop; wait for the Python child to exit
+before resuming. If Windows/process termination leaves locks, confirm no wrapper
+or Python controller remains before removing the corresponding continuation and
+driver lock files. Never delete a live controller's lock. Read-only status is safe
+alongside the wrapper. After inspecting any failure, resume with the same command;
+failed work still requires explicit review, not automatic resubmission.
+
+Before leaving overnight, plug in the laptop, disable sleep while plugged in,
+keep the terminal/network active, and check remaining EE monthly EECU allowance
+and current plus delayed Google Cloud charges against the $50 total budget.
+There is **no verified automatic quota/billing enforcement**. Alerts and workload
+forecasts are not caps; smaller unattended limits are necessary if budget headroom
+is uncertain. Inspect consumption again before authorizing another allowance.
+
 This approved scope reduction retains the exact 175 frozen fires and full original
 perimeters, but restricts extraction to one nonempty tile per fire. Within each
 fire, sort tiles by retained patch count, then batch ID; choose index `floor(n/2)`

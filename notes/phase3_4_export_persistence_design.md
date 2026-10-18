@@ -45,13 +45,13 @@ The following remain intentionally unproven and must be addressed in Phase 3.4.6
 Phase 3.4.6 will also add production status/provenance metadata and resume/skip/failure handling before the population launch.
 ## Current Plan B execution mapping
 
-The export-ready inventory is now 13 products per unsplit batch: Landsat 4,
-LANDFIRE 4, terrain 1, Daymet 2, LCMS 1 and focal MTBS severity 1.
-Only EVC forest/cover and LCMS pre/post window reductions were consolidated,
+The export-ready inventory is now 12 products per unsplit batch: Landsat 4,
+LANDFIRE 4, terrain 1, Daymet 1, LCMS 1 and focal MTBS severity 1.
+EVC forest/cover, LCMS pre/post and validated Daymet primary/coverage are consolidated,
 using their respective shared grids and sum reducers. Scientific outputs,
 independent masks, valid-area denominators and deferred eligibility thresholds
-are unchanged. Daymet primary/coverage and EVT support/categories remain
-separate; the four Landsat graphs remain independent.
+are unchanged. Daymet uses product=`combined`; EVT support/categories remain
+separate, and the four Landsat graphs remain independent.
 
 See [the production execution contract](phase3_4_production_contract.md#plan-b-production-products)
 for product names and the builder API. These builders do not submit tasks or

@@ -118,7 +118,7 @@ class GraphTests(ApiTestCase):
             product = candidate.build_qa4_product(images, fc, fire)
             new_inputs, _, projection = build.call_args.args
             separate = reductions.build_daymet_products(images, fc)
-        self.assertEqual(set(separate), {"primary", "coverage"})
+        self.assertEqual(set(separate), {"combined"})
         self.assertEqual(len(full["columns"]), 65)
         self.assertEqual(len(product["columns"]), 41)
         self.assertEqual(len(set(product["columns"])), 41)

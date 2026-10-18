@@ -136,7 +136,7 @@ def dataset_roles(table):
 
 
 def build_raster_products(fire, patches, *, reference_projection=None):
-    """Enumerate 13 independent raw products for one existing, unsplit batch.
+    """Enumerate 12 independent raw products for one existing, unsplit batch.
 
     Return source -> product -> {collection, columns, ...}. Single-product
     sources use None, preserving legacy persistence paths. Each collection

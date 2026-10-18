@@ -252,20 +252,23 @@ def daymet_area_inputs(images):
 
 
 def build_daymet_products(images, patches):
-    """Keep production primary and coverage as two independent reductions."""
+    """Validated combined climate/coverage product; independent per-variable masks."""
     values, qa, projection = daymet_area_inputs(images)
-    return {"primary": build_area_product(values, patches, projection),
-            "coverage": build_area_product(qa, patches, projection)}
+    if values.keys() & qa.keys():
+        raise ValueError("Daymet variable names overlap")
+    return {"combined": build_area_product({**values, **qa}, patches, projection)}
 
 
 def reduce_daymet(images, patches):
-    """Fetch the two unchanged Daymet products and retain existing climate/QA fields."""
+    """Fetch once and retain the existing climate means, validity and full temporal QA."""
     products = build_daymet_products(images, patches)
     names = daymet.HISTORICAL_BANDS + daymet.PRE_S1_BANDS + daymet.PRE_S1_ANOMALY_BANDS + daymet.S1_ANOMALY_BANDS
-    result = summarize_area_sums(fetch_product(products["primary"]), names).rename(
+    raw = fetch_product(products["combined"])
+    result = summarize_area_sums(raw, names).rename(
         columns={name + "_mean": name for name in names})
-    qa = [name.removesuffix("_sum") for name in products["coverage"]["columns"] if name.endswith("_sum")]
-    part = summarize_area_sums(fetch_product(products["coverage"]), qa)
+    qa = [name.removesuffix("_sum") for name in products["combined"]["columns"]
+          if name.endswith("_sum") and name.removesuffix("_sum") not in names]
+    part = summarize_area_sums(raw, qa)
     # QA masks describe coverage counts themselves, not additional climate features.
     part = part.drop(columns=[name + "_valid_fraction" for name in qa])
     return result.merge(part, on=["patch_id", "fire_id"], validate="one_to_one")

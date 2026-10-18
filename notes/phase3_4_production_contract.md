@@ -171,7 +171,7 @@ changed by this amendment.
 
 ## Plan B production products
 
-Plan B is the implemented execution target: **13 independent raster-export
+Plan B is the implemented execution target: **12 independent raster-export
 products per unsplit spatial batch**. This is an execution optimization, not a
 scientific feature change or a choice of Phase 3.5 eligibility thresholds.
 
@@ -180,7 +180,7 @@ scientific feature change or a choice of Phase 3.5 eligibility thresholds.
 | landsat | nbrpre, season1, nbr5, season5_count | 4 |
 | landfire | evc, height, evt_support, evt_categories | 4 |
 | terrain | None (single product; existing path) | 1 |
-| daymet | primary, coverage | 2 |
+| daymet | combined | 1 |
 | lcms | None (single product; existing path) | 1 |
 | mtbs_severity | None (single product; existing path) | 1 |
 
@@ -195,8 +195,8 @@ LCMS pre_10yr and post_y_to_y5 share the same LCMS reference grid and sum reduce
 They now use one reduction with window-prefixed variables, separate masks and
 valid areas, and one unmasked same-grid full-area reference. Expected years
 remain local assembly metadata (10 and 6), exposed in the product descriptor.
-No disturbance timing fields return. Daymet primary and coverage remain two
-products pending runtime evidence. Terrain and severity stay consolidated as
+No disturbance timing fields return. Validated Daymet primary and coverage now
+share one `combined` product, retaining all climate and temporal QA fields. Terrain and severity stay consolidated as
 before. Landsat retains four independent graphs after Candidate A; only the retired drop graph is removed.
 
 `pipeline.build_raster_products(fire, patches, reference_projection=...)` returns
@@ -204,7 +204,8 @@ source -> product -> descriptor for an existing canonical batch, without fetchin
 submitting or rebuilding its grid. Descriptors contain `collection` and `columns`;
 LCMS also includes `expected_years`. Submit each collection independently using
 the existing controller's source/product identity, expected patch IDs and batch ID.
-Single-product sources use product=None, preserving their existing path layout.
+Unnamed single-product sources use product=None, preserving their existing path layout;
+Daymet explicitly uses product="combined".
 MTBS prior/reburn history remains separate vector/local work and is not enumerated.
 
 Synchronous reducers use the same raw builders and retain the existing analytical
@@ -218,9 +219,9 @@ implementation.
 
 ## Phase 3.4.7A Candidate A: current inventory supersedes historical counts
 
-The dedicated `nbrdrop` product is retired. Production is now 13 products per
-unsplit tile-120 batch (four Landsat, two Daymet); future combined Daymet would
-make 12 only after separate approval. Other products and identities are unchanged.
+The dedicated `nbrdrop` product is retired. Candidate A reduced the inventory to 13;
+subsequent approved combined-Daymet promotion makes 12 per unsplit tile-120 batch.
+Other products and identities are unchanged.
 The controller/export API reject retired nbrdrop requests before cloud work.
 Historical status/raw/Parquet objects remain readable and are not deleted or
 required for completion of the current inventory. Earlier five-product Landsat
@@ -231,3 +232,15 @@ propagation and independently valid supports. There is no drop valid-fraction
 field. See the scientific amendment in docs/phase3_production_contract.md.
 The old manual Plan B harness is retained for historical check/collection only;
 its original inventory is not a current production submission contract.
+
+## Combined Daymet production promotion ? 2026-10-18
+
+Use source=`daymet`, product=`combined` with the existing deterministic path/status
+helpers. Earlier primary/coverage status records cannot mark this new identity
+complete. The raw schema contains 32 sum/area pairs (16 climate measurements,
+8 historical daily-coverage summaries and 8 current valid-day summaries), plus
+one `raster_full_area_m2`: 65 numeric columns, plus patch_id and fire_id.
+The validated EPSG:5070 30 m geographic association, independent masks and
+valid-area denominators are unchanged. Synchronous processing fetches once
+and retains its original analytical schema. Candidate C is rejected. Historical
+benchmark artifacts remain historical; no cloud data is migrated or overwritten.

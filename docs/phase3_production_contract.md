@@ -388,9 +388,10 @@ Retire the `nbrdrop` export and `nbr_drop_sum`, `nbr_drop_area`, `nbr_drop_mean`
 and `nbr_drop_valid_fraction`. Marginal validity cannot reconstruct common-support
 coverage. Historical artifacts retain their original meaning and are not renamed.
 
-Production now has 13 raster products: Landsat 4, LANDFIRE 4, terrain 1,
-Daymet 2, LCMS 1, focal severity 1. Combined Daymet is still experimental;
-promoting it separately would reduce this count to 12. Tile size remains 120.
+Production now has 12 raster products: Landsat 4, LANDFIRE 4, terrain 1,
+Daymet 1 (`combined`), LCMS 1, focal severity 1. Validated combined Daymet
+is promoted with all 16 climate measurements and all 16 temporal QA summaries
+unchanged; Candidate C is not adopted. Tile size remains 120.
 
 The interpretive `Recovery_5` expression in section 1 is unchanged. No active
 recovery-ratio implementation exists. Phase 3.6 must explicitly resolve its spatial

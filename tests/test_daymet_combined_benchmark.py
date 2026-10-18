@@ -22,11 +22,16 @@ class CombinedGraphTests(ApiTestCase):
             {"fire_year": 2019, "season1_year": 2020}, ee.Geometry.Point([-111, 33]))
         patches = ee.FeatureCollection([])
         with patch.object(reductions, "build_area_product", wraps=reductions.build_area_product) as build:
-            separate = reductions.build_daymet_products(images, patches)
+            values, qa, projection = reductions.daymet_area_inputs(images)
+            separate = {"primary": reductions.build_area_product(values, patches, projection),
+                        "coverage": reductions.build_area_product(qa, patches, projection)}
             primary, coverage = build.call_args_list
             combined = experiment.build_combined_product(images, patches)
             merged = build.call_args_list[-1]
-        self.assertEqual(set(separate), {"primary", "coverage"})
+        production = reductions.build_daymet_products(images, patches)
+        self.assertEqual(set(production), {"combined"})
+        self.assertEqual(production["combined"]["collection"].serialize(), combined["collection"].serialize())
+        self.assertEqual(production["combined"]["columns"], combined["columns"])
         expected_inputs = {**primary.args[0], **coverage.args[0]}
         self.assertEqual(set(merged.args[0]), set(expected_inputs))
         for name, image in expected_inputs.items():
@@ -50,6 +55,36 @@ class CombinedGraphTests(ApiTestCase):
 
 
 class ComparisonTests(unittest.TestCase):
+    def test_production_fetches_once_preserving_all_climate_and_temporal_qa(self):
+        names = daymet.HISTORICAL_BANDS + daymet.PRE_S1_BANDS + daymet.PRE_S1_ANOMALY_BANDS + daymet.S1_ANOMALY_BANDS
+        qa = [f"daymet_{prefix}{period}_{band}_{suffix}"
+              for period in ("pre_s1", "s1") for band in daymet.SUMMARY_BANDS
+              for prefix, suffix in (("hist_", "daily_coverage"), ("", "valid_days"))]
+        raw = pd.DataFrame({"patch_id": ["p", "q"], "fire_id": ["f", "f"],
+                            reductions.RASTER_FULL_AREA: [8100., 8100.]})
+        for name in names:
+            raw[name + "_sum"] = [100., np.nan]
+            raw[name + "_area"] = [4050., np.nan]
+        for name in qa:
+            raw[name + "_sum"] = [0., 8100.]
+            raw[name + "_area"] = [8100., 8100.]
+        descriptor = {"columns": list(raw.columns[2:])}
+        with patch.object(reductions, "build_daymet_products", return_value={"combined": descriptor}), \
+             patch.object(reductions, "fetch_product", return_value=raw) as fetch:
+            result = reductions.reduce_daymet({}, object())
+        fetch.assert_called_once_with(descriptor)
+        expected = reductions.summarize_area_sums(raw, names).rename(
+            columns={name + "_mean": name for name in names})
+        old_qa = reductions.summarize_area_sums(raw, qa).drop(
+            columns=[name + "_valid_fraction" for name in qa])
+        expected = expected.merge(old_qa, on=["patch_id", "fire_id"], validate="one_to_one")
+        pd.testing.assert_frame_equal(result, expected)
+        self.assertEqual(len(names), 16)
+        self.assertEqual(len(qa), 16)
+        self.assertTrue(result.loc[1, names].isna().all())
+        self.assertEqual(result.loc[0, names[0] + "_valid_fraction"], .5)
+        self.assertEqual(result.loc[0, qa[0] + "_mean"], 0.)
+
     def setUp(self):
         for target in ("ee.Initialize", "google.cloud.storage.Client", "ee.data.computeFeatures",
                        "ee.batch.Export.table.toCloudStorage"):

@@ -1,3 +1,7 @@
+> Current scope: the launcher now uses the frozen California-175 population and
+> `phase3_ca175_v1`. See phase3_ca175_population.md for current inputs and commands.
+> Earlier 643-fire counts and archive names below are historical.
+
 # Minimal population waves
 
 `manual_population.py` reads the frozen selected manifest and existing tile-120

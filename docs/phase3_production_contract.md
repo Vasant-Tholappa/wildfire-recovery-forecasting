@@ -402,3 +402,14 @@ Recovery_5 to predictors (it uses the Season-5 target).
 This is an approved scientific scope amendment: simpler patch-summary change in
 exchange for losing matched-pixel change information, saving the dedicated
 pixelwise-drop export. Phase 2 notebooks and earlier pilot results remain history.
+
+
+## Final California population scope
+
+The approved modeling population is the frozen 175-fire CA-coded sample from
+the original eligible manifest, seed `ca_portfolio_175_v1`: 91 train, 43 validation,
+41 test fires; 729 tile-120 batches and 8,748 exports. Full original geometries
+and all source/target semantics remain unchanged. This supersedes the former
+643-fire production selection without deleting its outputs. Production launcher
+namespace is `phase3_ca175_v1`; historical `phase3_prod_v1` is separate.
+See `notes/phase3_ca175_population.md` for exact selection and preservation rules.

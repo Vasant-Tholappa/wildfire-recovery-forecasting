@@ -14,6 +14,18 @@ class PopulationTests(unittest.TestCase):
         return {driver.production.status_path(**driver.key(self.items[i])):
                 {"status": status, "ee_task_id": task}}
 
+    def test_california_namespace_isolates_all_paths_and_metadata_identity(self):
+        item = self.items[0]
+        k = driver.key(item)
+        self.assertEqual(k["production_version"], "phase3_ca175_v1")
+        for helper in (driver.production.status_path, driver.production.raw_export_prefix, driver.production.parquet_path):
+            self.assertIn("/phase3_ca175_v1/", helper(**k))
+            old = {**k, "production_version": "phase3_prod_v1"}
+            self.assertNotEqual(helper(**k), helper(**old))
+        client = Mock(); client.list_blobs.return_value = []
+        driver.read_cloud_state(self.items, client, [])
+        self.assertEqual(client.list_blobs.call_args.kwargs["prefix"], "production/phase3_ca175_v1/status/")
+
     def test_inventory_paths_and_limits(self):
         self.assertEqual(sum(map(len, driver.INVENTORY.values())), 12)
         self.assertEqual(driver.INVENTORY["daymet"], ("combined",))

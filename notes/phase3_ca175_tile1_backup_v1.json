@@ -1,0 +1,9 @@
+{
+  "archive": "data\\processed\\phase3_ca175_tile1_launch_inputs_v1.zip",
+  "archive_sha256": "229d7f34769819761e577a8ca5197c3aa1d4ed6807e2c7c3675121758212d95a",
+  "files_sha256": {
+    "phase3_ca175_tile1_v1.parquet": "a81477f0bcbfb44896f91b2756066a8b4a1a9e918d86a7d25cbd2c11c0382c14",
+    "phase3_ca175_tile1_v1_batches.parquet": "221844d4cbaf199f1a3dba9f666edc748b42ac587fe0c2bfef91a91a7fb79355",
+    "phase3_ca175_tile1_v1.json": "66f507b3de85d38214a9fce34d9c434072c384409c7e8540fc518c71010cac0d"
+  }
+}

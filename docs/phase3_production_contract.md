@@ -4,6 +4,12 @@ This document freezes the production rules for building the multi-fire patch-lev
 
 Production contract version: `v2`.
 
+Current extraction amendment: retain the frozen 175 California fires but select
+one upper-median-occupancy tile per fire (175 tiles, 308,048 candidate patches).
+See [selection, limitations, and reuse contract](../notes/phase3_ca175_tile1_population.md).
+All source definitions, targets, chronological splits, and deferred eligibility
+thresholds remain unchanged; earlier population counts are historical.
+
 ## 1. Study population and modeling unit
 
 - Focal events: MTBS `Wildfire` events with ignition dates from 2015-01-01 through 2020-12-31.

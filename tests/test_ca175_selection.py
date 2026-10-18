@@ -24,6 +24,6 @@ class SelectionTests(unittest.TestCase):
                 self.assertEqual(getattr(row,name),value)
         import manual_population as driver
         manifest, items = driver.load_population()
-        self.assertEqual((len(manifest),len(items)),(175,8748))
-        self.assertEqual(len({(i["fire_id"],i["batch_id"]) for i in items}),729)
-        self.assertEqual(sum(i["patch_count"] for i in items)//12,2334795)
+        self.assertEqual((len(manifest),len(items)),(175,2100))
+        self.assertEqual(len({(i["fire_id"],i["batch_id"]) for i in items}),175)
+        self.assertEqual(sum(i["patch_count"] for i in items)//12,308048)

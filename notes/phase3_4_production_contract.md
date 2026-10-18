@@ -1,5 +1,11 @@
 # Phase 3.4.3 production execution contract
 
+Current launch namespace is `phase3_ca175_tile1_v1`: 175 representative tiles,
+2,100 required tables, including 12 verified tables referenced in place from
+`phase3_ca175_v1` (2,088 new exports). See the
+[compact population and reuse contract](phase3_ca175_tile1_population.md).
+Earlier namespaces and workload figures below remain historical.
+
 This records the locked storage contract. Scientific methodology remains defined
 by [the Phase 3 production contract](../docs/phase3_production_contract.md).
 

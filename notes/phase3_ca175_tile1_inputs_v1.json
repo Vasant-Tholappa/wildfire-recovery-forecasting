@@ -1,0 +1,924 @@
+{
+  "production_version": "phase3_ca175_tile1_v1",
+  "selection_rule": "Sort each fire's nonempty tiles by patch_count then batch_id; choose zero-based index floor(n/2) (upper median).",
+  "selected_ids_sha256": "3fc06786066229a08fbd63016826f6fd49beac1c6b43fbf09989b92e4bc5659f",
+  "manifest_sha256": "a81477f0bcbfb44896f91b2756066a8b4a1a9e918d86a7d25cbd2c11c0382c14",
+  "batches_sha256": "221844d4cbaf199f1a3dba9f666edc748b42ac587fe0c2bfef91a91a7fb79355",
+  "inputs_sha256": {
+    "phase3_ca175_population_v1.parquet": "a81477f0bcbfb44896f91b2756066a8b4a1a9e918d86a7d25cbd2c11c0382c14",
+    "phase3_ca175_batches_v1.parquet": "4cf4dc04ef4d473c95f09045885bbf4a5e306ab3c75cc7724135e3e6881c3d78"
+  },
+  "fire_count": 175,
+  "spatial_batches": 175,
+  "export_tasks": 2100,
+  "candidate_patches": 308048,
+  "year_counts": {
+    "2015": 25,
+    "2016": 25,
+    "2017": 41,
+    "2018": 27,
+    "2019": 16,
+    "2020": 41
+  },
+  "split_counts": {
+    "train": 91,
+    "validation": 43,
+    "test": 41
+  },
+  "occupancy": {
+    "count": 175.0,
+    "mean": 1760.2742857142857,
+    "std": 1451.519950160619,
+    "min": 43.0,
+    "25%": 767.0,
+    "50%": 1262.0,
+    "75%": 2328.0,
+    "90%": 3957.0,
+    "95%": 5188.399999999997,
+    "max": 6265.0
+  },
+  "reuse": [
+    {
+      "fire_id": "CA4118512343320200728",
+      "batch_id": "r215_c-210",
+      "production_version": "phase3_ca175_v1"
+    }
+  ],
+  "selected_batches": [
+    {
+      "fire_id": "CA3260811664120160619",
+      "batch_id": "r117_c-176",
+      "patch_count": 1288
+    },
+    {
+      "fire_id": "CA3265211682420170520",
+      "batch_id": "r118_c-179",
+      "patch_count": 1237
+    },
+    {
+      "fire_id": "CA3334911719120171207",
+      "batch_id": "r125_c-181",
+      "patch_count": 1520
+    },
+    {
+      "fire_id": "CA3336011747220150813",
+      "batch_id": "r126_c-183",
+      "patch_count": 844
+    },
+    {
+      "fire_id": "CA3337911735120200609",
+      "batch_id": "r127_c-182",
+      "patch_count": 3838
+    },
+    {
+      "fire_id": "CA3338011743020180706",
+      "batch_id": "r126_c-182",
+      "patch_count": 1175
+    },
+    {
+      "fire_id": "CA3340311726720201224",
+      "batch_id": "r126_c-181",
+      "patch_count": 2390
+    },
+    {
+      "fire_id": "CA3342111750320150428",
+      "batch_id": "r127_c-183",
+      "patch_count": 1293
+    },
+    {
+      "fire_id": "CA3352811727320190904",
+      "batch_id": "r127_c-181",
+      "patch_count": 295
+    },
+    {
+      "fire_id": "CA3363011706020180517",
+      "batch_id": "r128_c-179",
+      "patch_count": 606
+    },
+    {
+      "fire_id": "CA3375311768720201026",
+      "batch_id": "r130_c-183",
+      "patch_count": 428
+    },
+    {
+      "fire_id": "CA3378011763820201203",
+      "batch_id": "r131_c-184",
+      "patch_count": 729
+    },
+    {
+      "fire_id": "CA3386511772020171009",
+      "batch_id": "r132_c-184",
+      "patch_count": 320
+    },
+    {
+      "fire_id": "CA3388211699020170626",
+      "batch_id": "r130_c-177",
+      "patch_count": 2980
+    },
+    {
+      "fire_id": "CA3388411764320150419",
+      "batch_id": "r132_c-183",
+      "patch_count": 688
+    },
+    {
+      "fire_id": "CA3398311730820170813",
+      "batch_id": "r132_c-180",
+      "patch_count": 639
+    },
+    {
+      "fire_id": "CA3399211696420200731",
+      "batch_id": "r131_c-177",
+      "patch_count": 1682
+    },
+    {
+      "fire_id": "CA3400611730620170430",
+      "batch_id": "r132_c-180",
+      "patch_count": 630
+    },
+    {
+      "fire_id": "CA3404211954320200531",
+      "batch_id": "r137_c-198",
+      "patch_count": 777
+    },
+    {
+      "fire_id": "CA3405311699120200905",
+      "batch_id": "r133_c-177",
+      "patch_count": 3761
+    },
+    {
+      "fire_id": "CA3409611695820180706",
+      "batch_id": "r132_c-177",
+      "patch_count": 62
+    },
+    {
+      "fire_id": "CA3414411793320160620",
+      "batch_id": "r135_c-184",
+      "patch_count": 135
+    },
+    {
+      "fire_id": "CA3415711791120200813",
+      "batch_id": "r136_c-184",
+      "patch_count": 454
+    },
+    {
+      "fire_id": "CA3415811689620150617",
+      "batch_id": "r132_c-175",
+      "patch_count": 4110
+    },
+    {
+      "fire_id": "CA3416811790020160620",
+      "batch_id": "r135_c-184",
+      "patch_count": 723
+    },
+    {
+      "fire_id": "CA3424011870020181108",
+      "batch_id": "r137_c-193",
+      "patch_count": 1587
+    },
+    {
+      "fire_id": "CA3426511785520150814",
+      "batch_id": "r136_c-184",
+      "patch_count": 843
+    },
+    {
+      "fire_id": "CA3429311680920170619",
+      "batch_id": "r134_c-175",
+      "patch_count": 464
+    },
+    {
+      "fire_id": "CA3429511836120170901",
+      "batch_id": "r137_c-188",
+      "patch_count": 1462
+    },
+    {
+      "fire_id": "CA3432611848120191010",
+      "batch_id": "r138_c-190",
+      "patch_count": 440
+    },
+    {
+      "fire_id": "CA3436911855620160709",
+      "batch_id": "r138_c-189",
+      "patch_count": 372
+    },
+    {
+      "fire_id": "CA3442911910020171205",
+      "batch_id": "r142_c-195",
+      "patch_count": 5344
+    },
+    {
+      "fire_id": "CA3443111839820160722",
+      "batch_id": "r139_c-187",
+      "patch_count": 1148
+    },
+    {
+      "fire_id": "CA3445311858120171205",
+      "batch_id": "r139_c-190",
+      "patch_count": 2070
+    },
+    {
+      "fire_id": "CA3451411979320191125",
+      "batch_id": "r142_c-199",
+      "patch_count": 1557
+    },
+    {
+      "fire_id": "CA3453012005420160615",
+      "batch_id": "r143_c-201",
+      "patch_count": 2962
+    },
+    {
+      "fire_id": "CA3454611980520160818",
+      "batch_id": "r143_c-197",
+      "patch_count": 452
+    },
+    {
+      "fire_id": "CA3456711995220170708",
+      "batch_id": "r143_c-201",
+      "patch_count": 3145
+    },
+    {
+      "fire_id": "CA3496111944820170718",
+      "batch_id": "r146_c-195",
+      "patch_count": 663
+    },
+    {
+      "fire_id": "CA3502012029920170706",
+      "batch_id": "r147_c-202",
+      "patch_count": 2324
+    },
+    {
+      "fire_id": "CA3504011960120160605",
+      "batch_id": "r147_c-196",
+      "patch_count": 1229
+    },
+    {
+      "fire_id": "CA3521211873720160701",
+      "batch_id": "r147_c-188",
+      "patch_count": 1039
+    },
+    {
+      "fire_id": "CA3531811870820200701",
+      "batch_id": "r148_c-188",
+      "patch_count": 1699
+    },
+    {
+      "fire_id": "CA3540011877020180803",
+      "batch_id": "r149_c-188",
+      "patch_count": 1874
+    },
+    {
+      "fire_id": "CA3546511854420200803",
+      "batch_id": "r149_c-186",
+      "patch_count": 3915
+    },
+    {
+      "fire_id": "CA3557211858220170618",
+      "batch_id": "r151_c-187",
+      "patch_count": 353
+    },
+    {
+      "fire_id": "CA3566212040420190612",
+      "batch_id": "r155_c-201",
+      "patch_count": 1094
+    },
+    {
+      "fire_id": "CA3574511858420160816",
+      "batch_id": "r153_c-185",
+      "patch_count": 794
+    },
+    {
+      "fire_id": "CA3575611840320170901",
+      "batch_id": "r152_c-184",
+      "patch_count": 429
+    },
+    {
+      "fire_id": "CA3589912026320170710",
+      "batch_id": "r159_c-200",
+      "patch_count": 3059
+    },
+    {
+      "fire_id": "CA3598611856520161030",
+      "batch_id": "r155_c-186",
+      "patch_count": 701
+    },
+    {
+      "fire_id": "CA3601612132120160602",
+      "batch_id": "r161_c-207",
+      "patch_count": 332
+    },
+    {
+      "fire_id": "CA3602811896220170730",
+      "batch_id": "r155_c-188",
+      "patch_count": 173
+    },
+    {
+      "fire_id": "CA3603212047720170717",
+      "batch_id": "r159_c-201",
+      "patch_count": 986
+    },
+    {
+      "fire_id": "CA3605412006420200503",
+      "batch_id": "r158_c-197",
+      "patch_count": 1133
+    },
+    {
+      "fire_id": "CA3606211763420200821",
+      "batch_id": "r154_c-177",
+      "patch_count": 5832
+    },
+    {
+      "fire_id": "CA3606611745820200728",
+      "batch_id": "r153_c-176",
+      "patch_count": 1768
+    },
+    {
+      "fire_id": "CA3606812023620170420",
+      "batch_id": "r159_c-199",
+      "patch_count": 2479
+    },
+    {
+      "fire_id": "CA3607512023120200815",
+      "batch_id": "r158_c-199",
+      "patch_count": 1001
+    },
+    {
+      "fire_id": "CA3608212045920160702",
+      "batch_id": "r159_c-200",
+      "patch_count": 876
+    },
+    {
+      "fire_id": "CA3608912052220160809",
+      "batch_id": "r160_c-201",
+      "patch_count": 3364
+    },
+    {
+      "fire_id": "CA3609911841220170624",
+      "batch_id": "r156_c-184",
+      "patch_count": 2754
+    },
+    {
+      "fire_id": "CA3611812036120170518",
+      "batch_id": "r159_c-200",
+      "patch_count": 5384
+    },
+    {
+      "fire_id": "CA3612312160220200819",
+      "batch_id": "r163_c-210",
+      "patch_count": 2332
+    },
+    {
+      "fire_id": "CA3615911869620170829",
+      "batch_id": "r157_c-186",
+      "patch_count": 3948
+    },
+    {
+      "fire_id": "CA3622311855820161021",
+      "batch_id": "r157_c-185",
+      "patch_count": 757
+    },
+    {
+      "fire_id": "CA3625811864820161102",
+      "batch_id": "r157_c-185",
+      "patch_count": 471
+    },
+    {
+      "fire_id": "CA3628411822820190725",
+      "batch_id": "r157_c-182",
+      "patch_count": 1106
+    },
+    {
+      "fire_id": "CA3639412158320150919",
+      "batch_id": "r165_c-209",
+      "patch_count": 497
+    },
+    {
+      "fire_id": "CA3641011873720181004",
+      "batch_id": "r159_c-186",
+      "patch_count": 992
+    },
+    {
+      "fire_id": "CA3641012100020180604",
+      "batch_id": "r163_c-203",
+      "patch_count": 119
+    },
+    {
+      "fire_id": "CA3641412125020160522",
+      "batch_id": "r164_c-206",
+      "patch_count": 1798
+    },
+    {
+      "fire_id": "CA3644612168220200818",
+      "batch_id": "r165_c-209",
+      "patch_count": 2912
+    },
+    {
+      "fire_id": "CA3646112190120160722",
+      "batch_id": "r166_c-210",
+      "patch_count": 4392
+    },
+    {
+      "fire_id": "CA3656312164020200816",
+      "batch_id": "r167_c-209",
+      "patch_count": 2335
+    },
+    {
+      "fire_id": "CA3664611822120180708",
+      "batch_id": "r161_c-181",
+      "patch_count": 1584
+    },
+    {
+      "fire_id": "CA3667512102020200715",
+      "batch_id": "r167_c-203",
+      "patch_count": 514
+    },
+    {
+      "fire_id": "CA3686012078020180502",
+      "batch_id": "r168_c-201",
+      "patch_count": 1036
+    },
+    {
+      "fire_id": "CA3687411890520150801",
+      "batch_id": "r165_c-186",
+      "patch_count": 5891
+    },
+    {
+      "fire_id": "CA3700411949520160730",
+      "batch_id": "r167_c-190",
+      "patch_count": 1387
+    },
+    {
+      "fire_id": "CA3702412151420200705",
+      "batch_id": "r171_c-206",
+      "patch_count": 2874
+    },
+    {
+      "fire_id": "CA3703411834520190904",
+      "batch_id": "r164_c-181",
+      "patch_count": 1272
+    },
+    {
+      "fire_id": "CA3721711946920170903",
+      "batch_id": "r169_c-190",
+      "patch_count": 376
+    },
+    {
+      "fire_id": "CA3728211950220150725",
+      "batch_id": "r169_c-189",
+      "patch_count": 821
+    },
+    {
+      "fire_id": "CA3735012030020180615",
+      "batch_id": "r173_c-195",
+      "patch_count": 529
+    },
+    {
+      "fire_id": "CA3741111851120180219",
+      "batch_id": "r169_c-182",
+      "patch_count": 80
+    },
+    {
+      "fire_id": "CA3742412156820200816",
+      "batch_id": "r175_c-203",
+      "patch_count": 6265
+    },
+    {
+      "fire_id": "CA3745411858420150206",
+      "batch_id": "r170_c-183",
+      "patch_count": 65
+    },
+    {
+      "fire_id": "CA3747212124920190625",
+      "batch_id": "r175_c-203",
+      "patch_count": 1345
+    },
+    {
+      "fire_id": "CA3753811959820170813",
+      "batch_id": "r172_c-189",
+      "patch_count": 1258
+    },
+    {
+      "fire_id": "CA3756511912720180611",
+      "batch_id": "r171_c-186",
+      "patch_count": 199
+    },
+    {
+      "fire_id": "CA3764612162620150819",
+      "batch_id": "r177_c-205",
+      "patch_count": 1058
+    },
+    {
+      "fire_id": "CA3765211988120180713",
+      "batch_id": "r174_c-190",
+      "patch_count": 2814
+    },
+    {
+      "fire_id": "CA3778011892120160917",
+      "batch_id": "r174_c-184",
+      "patch_count": 43
+    },
+    {
+      "fire_id": "CA3779911892220160804",
+      "batch_id": "r174_c-184",
+      "patch_count": 1211
+    },
+    {
+      "fire_id": "CA3782611887220190726",
+      "batch_id": "r174_c-184",
+      "patch_count": 2179
+    },
+    {
+      "fire_id": "CA3787811915920150815",
+      "batch_id": "r175_c-185",
+      "patch_count": 1499
+    },
+    {
+      "fire_id": "CA3788211964320200811",
+      "batch_id": "r176_c-189",
+      "patch_count": 1317
+    },
+    {
+      "fire_id": "CA3792911898320200817",
+      "batch_id": "r175_c-184",
+      "patch_count": 1976
+    },
+    {
+      "fire_id": "CA3801812283920200818",
+      "batch_id": "r184_c-214",
+      "patch_count": 2007
+    },
+    {
+      "fire_id": "CA3802612076120200818",
+      "batch_id": "r179_c-198",
+      "patch_count": 963
+    },
+    {
+      "fire_id": "CA3805012095020180629",
+      "batch_id": "r180_c-199",
+      "patch_count": 2007
+    },
+    {
+      "fire_id": "CA3808512073320200616",
+      "batch_id": "r180_c-197",
+      "patch_count": 882
+    },
+    {
+      "fire_id": "CA3834312069620150909",
+      "batch_id": "r182_c-195",
+      "patch_count": 5381
+    },
+    {
+      "fire_id": "CA3834911992920180801",
+      "batch_id": "r182_c-190",
+      "patch_count": 1875
+    },
+    {
+      "fire_id": "CA3838712252020171009",
+      "batch_id": "r186_c-209",
+      "patch_count": 2861
+    },
+    {
+      "fire_id": "CA3839112224120171009",
+      "batch_id": "r187_c-209",
+      "patch_count": 1335
+    },
+    {
+      "fire_id": "CA3839611945120180904",
+      "batch_id": "r180_c-186",
+      "patch_count": 1135
+    },
+    {
+      "fire_id": "CA3850412233720200817",
+      "batch_id": "r187_c-206",
+      "patch_count": 5693
+    },
+    {
+      "fire_id": "CA3851412322420200817",
+      "batch_id": "r190_c-215",
+      "patch_count": 1153
+    },
+    {
+      "fire_id": "CA3851511946520201117",
+      "batch_id": "r182_c-185",
+      "patch_count": 1418
+    },
+    {
+      "fire_id": "CA3851812110420170726",
+      "batch_id": "r185_c-199",
+      "patch_count": 459
+    },
+    {
+      "fire_id": "CA3856811956820200830",
+      "batch_id": "r182_c-188",
+      "patch_count": 972
+    },
+    {
+      "fire_id": "CA3867312307820200817",
+      "batch_id": "r191_c-213",
+      "patch_count": 5320
+    },
+    {
+      "fire_id": "CA3880512281020160925",
+      "batch_id": "r192_c-211",
+      "patch_count": 695
+    },
+    {
+      "fire_id": "CA3884412276020150912",
+      "batch_id": "r190_c-209",
+      "patch_count": 4788
+    },
+    {
+      "fire_id": "CA3891212249320150729",
+      "batch_id": "r192_c-209",
+      "patch_count": 5743
+    },
+    {
+      "fire_id": "CA3892812226620190608",
+      "batch_id": "r192_c-207",
+      "patch_count": 790
+    },
+    {
+      "fire_id": "CA3899012039420200908",
+      "batch_id": "r188_c-193",
+      "patch_count": 241
+    },
+    {
+      "fire_id": "CA3900312269020171009",
+      "batch_id": "r193_c-210",
+      "patch_count": 1167
+    },
+    {
+      "fire_id": "CA3906012314020180727",
+      "batch_id": "r195_c-213",
+      "patch_count": 4396
+    },
+    {
+      "fire_id": "CA3919012180020180731",
+      "batch_id": "r193_c-203",
+      "patch_count": 190
+    },
+    {
+      "fire_id": "CA3919212088220150725",
+      "batch_id": "r191_c-195",
+      "patch_count": 79
+    },
+    {
+      "fire_id": "CA3936812133420171009",
+      "batch_id": "r195_c-199",
+      "patch_count": 1262
+    },
+    {
+      "fire_id": "CA3938112133120200909",
+      "batch_id": "r194_c-198",
+      "patch_count": 681
+    },
+    {
+      "fire_id": "CA3946112141320170707",
+      "batch_id": "r196_c-199",
+      "patch_count": 1216
+    },
+    {
+      "fire_id": "CA3957512131620170829",
+      "batch_id": "r196_c-197",
+      "patch_count": 1756
+    },
+    {
+      "fire_id": "CA3966012253020180609",
+      "batch_id": "r199_c-207",
+      "patch_count": 1262
+    },
+    {
+      "fire_id": "CA3968112017120200814",
+      "batch_id": "r194_c-188",
+      "patch_count": 2511
+    },
+    {
+      "fire_id": "CA3982012144020181108",
+      "batch_id": "r198_c-201",
+      "patch_count": 2198
+    },
+    {
+      "fire_id": "CA3988012002520190824",
+      "batch_id": "r197_c-187",
+      "patch_count": 1103
+    },
+    {
+      "fire_id": "CA3990612097220170729",
+      "batch_id": "r199_c-194",
+      "patch_count": 2416
+    },
+    {
+      "fire_id": "CA3994012236020180609",
+      "batch_id": "r202_c-205",
+      "patch_count": 1177
+    },
+    {
+      "fire_id": "CA4004012260920191103",
+      "batch_id": "r204_c-206",
+      "patch_count": 1585
+    },
+    {
+      "fire_id": "CA4005312066920190904",
+      "batch_id": "r201_c-191",
+      "patch_count": 2040
+    },
+    {
+      "fire_id": "CA4009112093120200817",
+      "batch_id": "r197_c-195",
+      "patch_count": 5110
+    },
+    {
+      "fire_id": "CA4010912278920190905",
+      "batch_id": "r205_c-208",
+      "patch_count": 1458
+    },
+    {
+      "fire_id": "CA4011512332020170808",
+      "batch_id": "r206_c-211",
+      "patch_count": 1781
+    },
+    {
+      "fire_id": "CA4016812363920150730",
+      "batch_id": "r208_c-213",
+      "patch_count": 521
+    },
+    {
+      "fire_id": "CA4018412336320170808",
+      "batch_id": "r207_c-211",
+      "patch_count": 884
+    },
+    {
+      "fire_id": "CA4022012217020181007",
+      "batch_id": "r204_c-202",
+      "patch_count": 1168
+    },
+    {
+      "fire_id": "CA4022812303620170913",
+      "batch_id": "r207_c-209",
+      "patch_count": 787
+    },
+    {
+      "fire_id": "CA4027912076220200817",
+      "batch_id": "r202_c-191",
+      "patch_count": 2978
+    },
+    {
+      "fire_id": "CA4034312338320150731",
+      "batch_id": "r208_c-211",
+      "patch_count": 3254
+    },
+    {
+      "fire_id": "CA4035712344220150731",
+      "batch_id": "r208_c-211",
+      "patch_count": 1172
+    },
+    {
+      "fire_id": "CA4036812080220160911",
+      "batch_id": "r203_c-191",
+      "patch_count": 1421
+    },
+    {
+      "fire_id": "CA4038712317320150730",
+      "batch_id": "r208_c-210",
+      "patch_count": 365
+    },
+    {
+      "fire_id": "CA4042112086320200718",
+      "batch_id": "r204_c-191",
+      "patch_count": 1918
+    },
+    {
+      "fire_id": "CA4045612355620150806",
+      "batch_id": "r210_c-212",
+      "patch_count": 1060
+    },
+    {
+      "fire_id": "CA4049212319820150803",
+      "batch_id": "r210_c-209",
+      "patch_count": 1315
+    },
+    {
+      "fire_id": "CA4054112256820200927",
+      "batch_id": "r206_c-206",
+      "patch_count": 1260
+    },
+    {
+      "fire_id": "CA4058912057520190828",
+      "batch_id": "r205_c-189",
+      "patch_count": 2071
+    },
+    {
+      "fire_id": "CA4065012263020180723",
+      "batch_id": "r210_c-203",
+      "patch_count": 4408
+    },
+    {
+      "fire_id": "CA4083912297820170808",
+      "batch_id": "r212_c-207",
+      "patch_count": 1041
+    },
+    {
+      "fire_id": "CA4091312343720150731",
+      "batch_id": "r213_c-209",
+      "patch_count": 4724
+    },
+    {
+      "fire_id": "CA4114012366020180816",
+      "batch_id": "r217_c-211",
+      "patch_count": 2065
+    },
+    {
+      "fire_id": "CA4118512343320200728",
+      "batch_id": "r215_c-210",
+      "patch_count": 3602
+    },
+    {
+      "fire_id": "CA4121212284720200914",
+      "batch_id": "r216_c-205",
+      "patch_count": 872
+    },
+    {
+      "fire_id": "CA4128112031520160917",
+      "batch_id": "r211_c-185",
+      "patch_count": 1517
+    },
+    {
+      "fire_id": "CA4129012012020180713",
+      "batch_id": "r211_c-184",
+      "patch_count": 1169
+    },
+    {
+      "fire_id": "CA4130712105620170725",
+      "batch_id": "r212_c-191",
+      "patch_count": 3489
+    },
+    {
+      "fire_id": "CA4136412109120200722",
+      "batch_id": "r214_c-191",
+      "patch_count": 696
+    },
+    {
+      "fire_id": "CA4143512316220170626",
+      "batch_id": "r219_c-205",
+      "patch_count": 3963
+    },
+    {
+      "fire_id": "CA4146612032120170803",
+      "batch_id": "r213_c-185",
+      "patch_count": 3541
+    },
+    {
+      "fire_id": "CA4146912375220150801",
+      "batch_id": "r220_c-211",
+      "patch_count": 2378
+    },
+    {
+      "fire_id": "CA4154912328620170726",
+      "batch_id": "r220_c-207",
+      "patch_count": 937
+    },
+    {
+      "fire_id": "CA4155612377620150802",
+      "batch_id": "r222_c-211",
+      "patch_count": 2189
+    },
+    {
+      "fire_id": "CA4173712105820200723",
+      "batch_id": "r217_c-190",
+      "patch_count": 929
+    },
+    {
+      "fire_id": "CA4174812105620190905",
+      "batch_id": "r218_c-189",
+      "patch_count": 547
+    },
+    {
+      "fire_id": "CA4180012381520150801",
+      "batch_id": "r224_c-210",
+      "patch_count": 242
+    },
+    {
+      "fire_id": "CA4185212099120170726",
+      "batch_id": "r218_c-189",
+      "patch_count": 5132
+    },
+    {
+      "fire_id": "CA4185312311520160828",
+      "batch_id": "r222_c-205",
+      "patch_count": 1702
+    },
+    {
+      "fire_id": "CA4186612267020190905",
+      "batch_id": "r222_c-201",
+      "patch_count": 1050
+    },
+    {
+      "fire_id": "CA4188012254020180705",
+      "batch_id": "r223_c-201",
+      "patch_count": 1769
+    },
+    {
+      "fire_id": "CA4195612355120180715",
+      "batch_id": "r225_c-208",
+      "patch_count": 1849
+    }
+  ]
+}

@@ -1,5 +1,9 @@
 # Final California scope: ca_portfolio_175_v1
 
+**Current extraction scope:** [one representative tile per fire](phase3_ca175_tile1_population.md)
+supersedes the all-tile workload below. This document preserves the unchanged
+175-fire selection and historical all-tile counts.
+
 This supersedes the 643-fire launch population. The original 1,904-fire manifest
 and former 643-fire artifacts remain historical and unchanged. Retain full original
 perimeters of CA-coded events, not state-clipped geometries.

@@ -52,6 +52,8 @@ class RasterProductTests(ApiTestCase):
             paths = set()
             for source, parts in products.items():
                 for name, product in parts.items():
+                    from manual_population import raw_columns
+                    self.assertEqual(product["columns"], raw_columns(source, name))
                     graph = product["collection"].serialize()
                     self.assertEqual(graph.count('"functionName": "Image.reduceRegions"'), 1)
                     self.assertEqual(len(product["columns"]), len(set(product["columns"])))

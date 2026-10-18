@@ -76,6 +76,15 @@ def validate_dataset(table, roles, *, expected_ids, fire_id):
     """Ensure the target and ablation/retrospective QA contract remains explicit."""
     validate_patch_table(table, expected_ids=expected_ids, fire_id=fire_id)
     validate_measurements(table)
+    retired = {"nbr_drop_mean", "nbr_drop_valid_fraction", "nbr_drop_sum", "nbr_drop_area"} & set(table)
+    if retired:
+        raise ValueError(f"Retired pixelwise NBR drop fields: {sorted(retired)}")
+    if "nbr_drop_patch" in table:
+        expected_drop = table["nbr_pre_mean"] - table["nbr_1_mean"]
+        if (not table.nbr_drop_patch.isna().equals(expected_drop.isna())
+                or not np.allclose(table.nbr_drop_patch, expected_drop, equal_nan=True,
+                                   rtol=1e-9, atol=1e-12)):
+            raise ValueError("nbr_drop_patch must be the null-preserving difference of patch means")
     if roles["target"] != "nbr_5_mean" or roles["target"] not in table:
         raise ValueError("NBR_5 target is missing or misidentified")
     obsolete = [name for name in table if name.startswith((

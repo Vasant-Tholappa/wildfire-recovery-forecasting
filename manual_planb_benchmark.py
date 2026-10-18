@@ -227,6 +227,8 @@ def main():
     parser.add_argument("--tiles", type=int, nargs="+", choices=[60, 90, 120, 150], default=[60, 90])
     parser.add_argument("--results", type=Path, default=RESULTS)
     args = parser.parse_args()
+    if args.mode == "submit":
+        parser.error("Historical 14-product benchmark is read-only after Candidate A; nbrdrop is retired")
     if args.mode == "submit" and (args.manifest is None or not args.manifest.is_file()):
         parser.error("submit requires --manifest pointing to an existing local GeoParquet")
     results = json.loads(args.results.read_text(encoding="utf-8")) if args.results.exists() else {

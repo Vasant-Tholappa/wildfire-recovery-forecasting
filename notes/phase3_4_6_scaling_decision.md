@@ -12,7 +12,8 @@ The 120 setting changes only execution packaging. It does not change the scienti
 
 ## Scaling evidence
 
-Plan B contains 14 independent raster export products per spatial batch.
+At benchmarking, Plan B contained 14 independent raster export products per spatial batch.
+Candidate A subsequently reduced production to 13; the measured evidence below is historical.
 
 The WOODBURY stress benchmark tested increasingly large dense batches:
 

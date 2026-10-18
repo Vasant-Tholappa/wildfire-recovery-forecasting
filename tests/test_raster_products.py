@@ -33,7 +33,7 @@ class RasterProductTests(ApiTestCase):
         self.collection = ee.FeatureCollection([])
         self.projection = ee.Projection("EPSG:5070").atScale(30)
 
-    def test_real_builders_enumerate_14_without_fetch_export_or_grid_rebuild(self):
+    def test_real_builders_enumerate_13_without_fetch_export_or_grid_rebuild(self):
         ignition = pd.Timestamp("2019-06-08", tz="UTC")
         fire = {"fire_id": "f", "ignition_date": ignition, **derive_fire_fields(ignition)}
         patches = build_fire_grid(box(0, 0, 180, 90), "f", perimeter_crs="EPSG:5070")
@@ -43,12 +43,12 @@ class RasterProductTests(ApiTestCase):
              patch.object(pipeline, "build_fire_grid", side_effect=AssertionError("Grid rebuilt")), \
              patch.object(pipeline.disturbance, "build_wildfire_history", side_effect=AssertionError("Vector fetch")):
             products = pipeline.build_raster_products(fire, patches, reference_projection=self.projection)
-            expected = {"landsat": {"nbrpre", "season1", "nbr5", "season5_count", "nbrdrop"},
+            expected = {"landsat": {"nbrpre", "season1", "nbr5", "season5_count"},
                         "landfire": {"evc", "height", "evt_support", "evt_categories"},
                         "daymet": {"primary", "coverage"}, "terrain": {None},
                         "lcms": {None}, "mtbs_severity": {None}}
             self.assertEqual({source: set(parts) for source, parts in products.items()}, expected)
-            self.assertEqual(sum(map(len, products.values())), 14)
+            self.assertEqual(sum(map(len, products.values())), 13)
             paths = set()
             for source, parts in products.items():
                 for name, product in parts.items():
@@ -56,7 +56,7 @@ class RasterProductTests(ApiTestCase):
                     self.assertEqual(graph.count('"functionName": "Image.reduceRegions"'), 1)
                     self.assertEqual(len(product["columns"]), len(set(product["columns"])))
                     paths.add(production.raw_export_prefix(source, "f", "r0_c0", product=name))
-            self.assertEqual(len(paths), 14)
+            self.assertEqual(len(paths), 13)
             self.assertEqual(products["lcms"][None]["expected_years"],
                              {"pre_10yr": 10, "post_y_to_y5": 6})
             self.assertEqual(len(products["lcms"][None]["columns"]), 17)

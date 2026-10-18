@@ -24,7 +24,6 @@ LANDSAT_PRODUCTS = {
     "season1": ("nbr_1", "season1_obs_count"),
     "nbr5": ("nbr_5",),
     "season5_count": ("season5_obs_count",),
-    "nbrdrop": ("nbr_drop",),
 }
 MTBS_SEVERITY_SOURCE = "USFS/GTAC/MTBS/annual_burn_severity_mosaics/v1"
 SEVERITY_CLASSES = {
@@ -108,7 +107,7 @@ def summarize_area_sums(raw, names, *, support=None, fractions=()):
 
 
 def build_landsat_products(images, patches, *, reference_projection):
-    """Return five independent raw collections/columns, without fetching or joining.
+    """Return four independent raw collections/columns, without fetching or joining.
 
     images comes from landsat.build_fire_nbr using the requested exact patch
     union; patches is that same EE patch collection. Pass the shared reference
@@ -127,15 +126,15 @@ def build_landsat_products(images, patches, *, reference_projection):
 
 
 def reduce_landsat(images, patches, *, expected, reference_projection):
-    """Retrieve five logical products independently and join exact patch populations.
+    """Retrieve four logical products independently and join exact patch populations.
 
-    Images retain their pixelwise definitions, including NBR drop and masks.
+    Images retain their existing pixelwise definitions and masks. Drop is deferred to SQL.
     expected is the local input patch table; no first returned subtable is
     allowed to redefine the population. The shared 30 m reference is explicit.
     """
     fire_id = expected.fire_id.iloc[0]
     validate_patch_table(expected, fire_id=fire_id)
-    names = ["nbr_pre", "nbr_1", "nbr_5", "nbr_drop",
+    names = ["nbr_pre", "nbr_1", "nbr_5",
              "prefire_selected_year_count", "season1_obs_count", "season5_obs_count"]
     result = pd.DataFrame(expected[["patch_id", "fire_id"]]).copy()
     for group in LANDSAT_PRODUCTS.values():

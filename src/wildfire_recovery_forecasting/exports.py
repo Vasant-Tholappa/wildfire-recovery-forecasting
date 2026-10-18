@@ -18,6 +18,8 @@ def start_table_export(collection, columns, *, source, fire_id, batch_id, produc
     not run local summaries, download rows, or assemble multiple source graphs.
     Submission errors propagate to the caller. No retry or persistence occurs.
     """
+    if source == "landsat" and product == "nbrdrop":
+        raise ValueError("nbrdrop is retired; derive nbr_drop_patch in Phase 3.6 SQL")
     prefix = production.raw_export_prefix(
         source, fire_id, batch_id, product=product, production_version=production_version)
     description = f"{production_version}_{source}_{fire_id}_batch_{batch_id}"

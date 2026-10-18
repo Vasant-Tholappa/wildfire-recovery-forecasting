@@ -13,6 +13,12 @@ DATA = ROOT / "data/processed"
 X = np.array([3600, 8100, 14400], dtype=float)
 
 
+def exclude_retired_products(measured):
+    """Filter historical measurements once, without modifying the saved benchmark."""
+    return {tile: {key: cost for key, cost in values.items() if key != "landsat/nbrdrop"}
+            for tile, values in measured.items()}
+
+
 def scenarios(n, y):
     """Three-point interpolation plus explicit unmeasured small-batch scenarios."""
     slope, intercept = np.polyfit(np.log(X), np.log(y), 1)
@@ -33,6 +39,8 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--combined-daymet", action="store_true",
                         help="Replace only Daymet with the validated combined benchmark")
+    parser.add_argument("--include-retired-nbrdrop", action="store_true",
+                        help="Reproduce the historical forecast before approved Candidate A")
     args = parser.parse_args()
     benchmark = json.loads((DATA / "planb_benchmark_results.json").read_text())
     population = pd.read_parquet(DATA / "phase3_planb_tile120_batch_patch_counts.parquet")
@@ -74,6 +82,8 @@ def main():
             del measured[tile]["daymet/primary"]
             del measured[tile]["daymet/coverage"]
             measured[tile]["daymet/combined"] = cost
+    if not args.include_retired_nbrdrop:
+        measured = exclude_retired_products(measured)
     totals = np.array([sum(v.values()) for v in measured.values()])
     aggregate_scenarios = scenarios(n, totals)
     product_rows = []
@@ -112,6 +122,7 @@ def main():
         "planning_hours": float(upper.sum() / 3600),
         "baseline_hours": baseline_hours,
         "combined_daymet": args.combined_daymet,
+        "candidate_a": not args.include_retired_nbrdrop,
         "below_smallest_benchmark_batches": int((n < 3600).sum()),
         "below_smallest_benchmark_patch_share": float(n[n < 3600].sum() / n.sum()),
         "central_hours_at_or_above_3600": float(central[n >= 3600].sum() / 3600),
@@ -127,6 +138,8 @@ def main():
         ],
     }
     stem = "phase3_planb_eecu_forecast" + ("_combined_daymet" if args.combined_daymet else "")
+    if not args.include_retired_nbrdrop:
+        stem += "_candidate_a"
     population.to_csv(DATA / f"{stem}_batches.csv", index=False)
     (DATA / f"{stem}.json").write_text(json.dumps(result, indent=2) + "\n")
     print(json.dumps(result, indent=2))

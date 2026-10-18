@@ -77,7 +77,7 @@ The primary model may use information available through the end of Season 1.
 The early ablation uses the same `NBR_5` target but excludes:
 
 - `NBR_1`
-- `NBR_drop`
+- `nbr_drop_patch`
 - other observed Season-1 spectral/recovery information
 - pre-Season-1 climate
 - Season-1 climate
@@ -362,3 +362,42 @@ Retain the necessary QA fields and select these rules from the population later 
 Phase 3 should generalize and scale validated Phase 2 behavior, fix known correctness issues, and produce a trustworthy modeling table.
 
 Do not add research-grade complexity, optional feature expansion, or unrelated sophistication unless a concrete production failure demonstrates the need.
+
+
+## Phase 3.4.7A amendment: patch-level NBR drop (Candidate A)
+
+Approved production definition: `nbr_drop_patch = nbr_pre_mean - nbr_1_mean`.
+The operands are separately area-weighted patch means over each season's valid
+Landsat support. This is NOT the old mean of pixelwise differences on common
+valid pixels. Changing coverage can affect the new difference; even disjoint
+supports can yield a value. Retain both original means and their valid fractions.
+
+Phase 3.6 BigQuery assembly must add:
+
+```sql
+nbr_pre_mean - nbr_1_mean AS nbr_drop_patch
+```
+
+Ordinary SQL subtraction propagates NULL if either operand is NULL; do not use
+COALESCE to replace missing means with zero. The new field is a primary predictor,
+never an early-ablation predictor. `nbr_5_mean` remains the target. No SQL assembly
+pipeline exists yet; current source tables intentionally do not require this
+future derived column. If present, local dataset validation checks its definition.
+
+Retire the `nbrdrop` export and `nbr_drop_sum`, `nbr_drop_area`, `nbr_drop_mean`,
+and `nbr_drop_valid_fraction`. Marginal validity cannot reconstruct common-support
+coverage. Historical artifacts retain their original meaning and are not renamed.
+
+Production now has 13 raster products: Landsat 4, LANDFIRE 4, terrain 1,
+Daymet 2, LCMS 1, focal severity 1. Combined Daymet is still experimental;
+promoting it separately would reduce this count to 12. Tile size remains 120.
+
+The interpretive `Recovery_5` expression in section 1 is unchanged. No active
+recovery-ratio implementation exists. Phase 3.6 must explicitly resolve its spatial
+support and zero/near-zero denominator policy before implementing it; do not
+silently substitute `nbr_drop_patch` into a former common-support ratio or add
+Recovery_5 to predictors (it uses the Season-5 target).
+
+This is an approved scientific scope amendment: simpler patch-summary change in
+exchange for losing matched-pixel change information, saving the dedicated
+pixelwise-drop export. Phase 2 notebooks and earlier pilot results remain history.

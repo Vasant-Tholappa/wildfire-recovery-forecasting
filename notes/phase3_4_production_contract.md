@@ -115,7 +115,7 @@ serialized; this is not a concurrent-worker locking system.
 
 ## Landsat production products
 
-Landsat persists five independent products per spatial batch under the single
+Landsat persists four independent products per spatial batch under the single
 logical source `landsat`:
 
 | Product | Existing reduction fields |
@@ -124,7 +124,6 @@ logical source `landsat`:
 | `season1` | NBR1 and Season-1 observation count |
 | `nbr5` | NBR5 |
 | `season5_count` | Season-5 observation count |
-| `nbrdrop` | Pixelwise NBRpre minus NBR1 |
 
 For a supplied product, paths insert `product={product}/` after the source:
 `production/{version}/{raw_exports|parquet|status}/landsat/product={product}/fire_id={fire_id}/batch_{batch_id}`
@@ -172,13 +171,13 @@ changed by this amendment.
 
 ## Plan B production products
 
-Plan B is the implemented execution target: **14 independent raster-export
+Plan B is the implemented execution target: **13 independent raster-export
 products per unsplit spatial batch**. This is an execution optimization, not a
 scientific feature change or a choice of Phase 3.5 eligibility thresholds.
 
 | Source | Product identifiers | Count |
 | --- | --- | --- |
-| landsat | nbrpre, season1, nbr5, season5_count, nbrdrop | 5 |
+| landsat | nbrpre, season1, nbr5, season5_count | 4 |
 | landfire | evc, height, evt_support, evt_categories | 4 |
 | terrain | None (single product; existing path) | 1 |
 | daymet | primary, coverage | 2 |
@@ -198,7 +197,7 @@ valid areas, and one unmasked same-grid full-area reference. Expected years
 remain local assembly metadata (10 and 6), exposed in the product descriptor.
 No disturbance timing fields return. Daymet primary and coverage remain two
 products pending runtime evidence. Terrain and severity stay consolidated as
-before. Landsat's five independent graphs remain unchanged.
+before. Landsat retains four independent graphs after Candidate A; only the retired drop graph is removed.
 
 `pipeline.build_raster_products(fire, patches, reference_projection=...)` returns
 source -> product -> descriptor for an existing canonical batch, without fetching,
@@ -215,3 +214,20 @@ The new bundled raw schemas must not be confused with earlier intermediate
 outputs. Live numerical equivalence, memory/runtime and categorical CSV round-trip
 validation remain required before production; no live benchmark was part of this
 implementation.
+
+
+## Phase 3.4.7A Candidate A: current inventory supersedes historical counts
+
+The dedicated `nbrdrop` product is retired. Production is now 13 products per
+unsplit tile-120 batch (four Landsat, two Daymet); future combined Daymet would
+make 12 only after separate approval. Other products and identities are unchanged.
+The controller/export API reject retired nbrdrop requests before cloud work.
+Historical status/raw/Parquet objects remain readable and are not deleted or
+required for completion of the current inventory. Earlier five-product Landsat
+and 14-product benchmark descriptions above are historical execution evidence.
+
+Phase 3.6 derives `nbr_drop_patch` as `nbr_pre_mean - nbr_1_mean`, with SQL NULL
+propagation and independently valid supports. There is no drop valid-fraction
+field. See the scientific amendment in docs/phase3_production_contract.md.
+The old manual Plan B harness is retained for historical check/collection only;
+its original inventory is not a current production submission contract.

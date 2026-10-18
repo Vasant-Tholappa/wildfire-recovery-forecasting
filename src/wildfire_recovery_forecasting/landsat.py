@@ -132,8 +132,9 @@ def build_fire_nbr(
     retaining incomplete selections where NBR_pre is masked (not the total
     usable count across all five years). Season 1/5 counts are valid unique
     dates without additional thresholds. QA is supported within geometry.
-    Each output band's name matches its dictionary key except the four
-    spectral products, whose bands are NBR_pre, NBR_1, NBR_5, and NBR_drop.
+    Each output band's name matches its dictionary key except the three
+    spectral products, whose bands are NBR_pre, NBR_1, and NBR_5.
+    nbr_drop_patch is deferred to Phase 3.6 SQL from separately supported patch means.
     """
     fields = (
         "prefire_search_start_year", "prefire_search_end_year",
@@ -176,7 +177,6 @@ def build_fire_nbr(
         "nbr_pre": nbr_pre,
         "nbr_1": nbr1,
         "nbr_5": nbr5,
-        "nbr_drop": nbr_pre.subtract(nbr1).rename("NBR_drop"),
         "nbr_pre_valid": valid,
         "prefire_selected_year_count": selected_count,
         "season1_obs_count": season1["obs_count"].rename("season1_obs_count"),

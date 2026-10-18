@@ -22,6 +22,8 @@ def advance_work_item(collection, columns, *, source, fire_id, batch_id,
     requires review, not a guess. Concurrent callers for one item are unsupported.
     Status persistence/read failures propagate instead of pretending success.
     """
+    if source == "landsat" and product == "nbrdrop":
+        raise ValueError("nbrdrop is retired; derive nbr_drop_patch in Phase 3.6 SQL")
     key = dict(source=source, fire_id=fire_id, batch_id=batch_id,
                production_version=production_version, client=client, product=product)
     saved = persistence.read_status(**key)

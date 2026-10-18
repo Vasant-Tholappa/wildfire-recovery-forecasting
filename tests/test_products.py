@@ -13,14 +13,14 @@ from wildfire_recovery_forecasting import persistence, production, reductions, w
 
 
 class ProductTests(unittest.TestCase):
-    def test_five_distinct_paths_and_legacy_paths(self):
-        names = ["nbrpre", "season1", "nbr5", "season5_count", "nbrdrop"]
+    def test_four_distinct_paths_and_legacy_paths(self):
+        names = ["nbrpre", "season1", "nbr5", "season5_count"]
         self.assertEqual(list(reductions.LANDSAT_PRODUCTS), names)
         for helper, folder, extension in [(production.raw_export_prefix, "raw_exports", ""),
                 (production.parquet_path, "parquet", ".parquet"),
                 (production.status_path, "status", ".json")]:
             paths = [helper("landsat", "fire", "r0_c0", product=name) for name in names]
-            self.assertEqual(len(set(paths)), 5)
+            self.assertEqual(len(set(paths)), 4)
             self.assertEqual(paths[0], f"production/phase3_prod_v1/{folder}/landsat/product=nbrpre/fire_id=fire/batch_r0_c0{extension}")
             self.assertEqual(helper("terrain", "fire", "r0_c0"),
                              f"production/phase3_prod_v1/{folder}/terrain/fire_id=fire/batch_r0_c0{extension}")

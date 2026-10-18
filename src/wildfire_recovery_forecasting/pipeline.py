@@ -121,7 +121,9 @@ def dataset_roles(table):
               "northness_mean", "eastness_mean", "fire_size_acres", "ignition_month"]
     severity = ["mtbs_" + name + "_fraction" for name in reductions.SEVERITY_CLASSES if name != "nonmapping"]
     early = static + severity + historical
-    primary = early + ["nbr_1_mean", "nbr_drop_mean"] + daymet.PRE_S1_BANDS + daymet.PRE_S1_ANOMALY_BANDS + daymet.S1_ANOMALY_BANDS
+    primary = early + ["nbr_1_mean"] + daymet.PRE_S1_BANDS + daymet.PRE_S1_ANOMALY_BANDS + daymet.S1_ANOMALY_BANDS
+    if "nbr_drop_patch" in table:
+        primary.append("nbr_drop_patch")  # Optional until Phase 3.6 SQL assembly.
     metadata = {"patch_id", "fire_id", "fire_name", "ignition_date", "fire_year", "split",
                 "grid_row", "grid_col", "source_dataset", "landfire_condition_year", "landfire_version",
                 "last_fully_prefire_growing_season_year", "prefire_search_start_year",
@@ -134,7 +136,7 @@ def dataset_roles(table):
 
 
 def build_raster_products(fire, patches, *, reference_projection=None):
-    """Enumerate 14 independent raw products for one existing, unsplit batch.
+    """Enumerate 13 independent raw products for one existing, unsplit batch.
 
     Return source -> product -> {collection, columns, ...}. Single-product
     sources use None, preserving legacy persistence paths. Each collection

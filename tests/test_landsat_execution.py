@@ -18,7 +18,7 @@ class LandsatExecutionTests(ApiTestCase):
         self.patches = build_fire_grid(box(0, 0, 270, 90), "fire", perimeter_crs="EPSG:5070")
         self.fire = {"fire_id": "fire", "season1_year": 2018}
         self.projection = ee.Projection("EPSG:32611").atScale(30)
-        self.names = ["nbr_pre", "nbr_1", "nbr_5", "nbr_drop",
+        self.names = ["nbr_pre", "nbr_1", "nbr_5",
                       "prefire_selected_year_count", "season1_obs_count", "season5_obs_count"]
         self.images = {name: ee.Image.constant(i).rename(name) for i, name in enumerate(self.names)}
 
@@ -26,28 +26,26 @@ class LandsatExecutionTests(ApiTestCase):
         result = pd.DataFrame(self.patches[["patch_id", "fire_id"]]).iloc[::-1].reset_index(drop=True)
         result[reductions.RASTER_FULL_AREA] = 8100.
         for name in images:
-            # Drop is intentionally not the difference of the patch means:
-            # a different common valid support can produce a different result.
-            value = {"nbr_pre": .6, "nbr_1": .2, "nbr_drop": .1}.get(name, .5)
+            value = {"nbr_pre": .6, "nbr_1": .2}.get(name, .5)
             result[name + "_sum"] = [value * 8100, np.nan, 0.]
             result[name + "_area"] = [8100., 0., 8100.]
         return result
 
-    def test_five_independent_requests_schema_missingness_and_pixelwise_drop(self):
+    def test_four_independent_requests_schema_and_missingness(self):
         with patch.object(reductions, "area_sums", side_effect=self.raw_sums) as sums:
             result = reductions.reduce_landsat(self.images, ee.FeatureCollection([]),
                 expected=self.patches, reference_projection=self.projection)
         self.assertEqual([list(call.args[0]) for call in sums.call_args_list], [
             ["nbr_pre", "prefire_selected_year_count"], ["nbr_1", "season1_obs_count"],
-            ["nbr_5"], ["season5_obs_count"], ["nbr_drop"]])
-        self.assertIs(sums.call_args_list[-1].args[0]["nbr_drop"], self.images["nbr_drop"])
+            ["nbr_5"], ["season5_obs_count"]])
         self.assertEqual(result.patch_id.tolist(), self.patches.patch_id.tolist())
         self.assertEqual(list(result), ["patch_id", "fire_id"] + [
             name + suffix for name in self.names for suffix in ("_mean", "_valid_fraction")])
-        self.assertAlmostEqual(result.nbr_drop_mean.iloc[2], .1)
-        self.assertTrue(pd.isna(result.nbr_drop_mean.iloc[1]))
-        self.assertEqual(result.nbr_drop_valid_fraction.iloc[1], 0)
-        self.assertEqual(result.nbr_drop_mean.iloc[0], 0)
+        self.assertFalse(any("nbr_drop" in name for name in result))
+        self.assertAlmostEqual(result.nbr_pre_mean.iloc[2], .6)
+        self.assertTrue(pd.isna(result.nbr_1_mean.iloc[1]))
+        self.assertEqual(result.nbr_1_valid_fraction.iloc[1], 0)
+        self.assertEqual(result.nbr_pre_mean.iloc[0], 0)
 
     def test_every_subtable_rejects_missing_extra_duplicate_or_wrong_fire_ids(self):
         for fault in ("missing", "extra", "duplicate", "wrong_fire"):
@@ -78,7 +76,7 @@ class LandsatExecutionTests(ApiTestCase):
              patch.object(ee.data, "computeFeatures", side_effect=AssertionError("Network")):
             products = reductions.build_landsat_products(self.images, collection,
                                                          reference_projection=self.projection)
-        self.assertEqual(len(products), 5)
+        self.assertEqual(len(products), 4)
         self.assertEqual(graphs, [(item["collection"].serialize(), item["columns"])
                                  for item in products.values()])
 

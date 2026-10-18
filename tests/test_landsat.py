@@ -218,8 +218,7 @@ class FireNBRTests(ApiTestCase):
             np.testing.assert_array_equal(np.ma.getmaskarray(result["nbr_pre"].values), [0, 0, 1, 0, 1])
             np.testing.assert_array_equal(result["prefire_selected_year_count"].values, [3, 3, 2, 3, 0])
             np.testing.assert_array_equal(result["nbr_pre_valid"].values, [1, 1, 0, 1, 0])
-            np.testing.assert_allclose(result["nbr_drop"].values.compressed(), [0.2, 0.6, 0.2])
-            np.testing.assert_array_equal(np.ma.getmaskarray(result["nbr_drop"].values), [0, 0, 1, 0, 1])
+            self.assertNotIn("nbr_drop", result)
             for key in ["nbr_1", "nbr_5"]:
                 self.assertFalse(np.ma.getmaskarray(result[key].values).any())
             for key in ["season1_obs_count", "season5_obs_count"]:

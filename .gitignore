@@ -21,8 +21,8 @@ outputs/*
 .ipynb_checkpoints/
 .env
 
-/mlruns/
+mlruns/
 
 mlflow.db*
 
-/mlartifacts/
+mlartifacts/

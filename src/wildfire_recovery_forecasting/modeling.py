@@ -59,3 +59,34 @@ def build_rf_pipeline(predictors):
             max_features=0.8, bootstrap=True, random_state=42, n_jobs=-1,
         )),
     ])
+
+
+def build_xgb_pipeline(predictors):
+    """Unfitted initial XGBoost pipeline, matching the saved Day 3 experiment.
+
+    Pass the approved predictor allowlist. Optuna overrides model__ parameters
+    on clones; encoding is learned only within each fit. No tuning runs here.
+    """
+    from xgboost import XGBRegressor
+
+    features = list(predictors)
+    if len(features) != len(set(features)):
+        raise ValueError("Duplicate predictor names")
+    if not set(CATEGORICAL_FEATURES).issubset(features):
+        raise ValueError("Both approved categorical predictors are required")
+    if {"nbr_5_mean", "fire_id", "patch_id", "split"}.intersection(features):
+        raise ValueError("Target and identifiers must not be predictors")
+    numeric = [f for f in features if f not in CATEGORICAL_FEATURES]
+    return Pipeline([
+        ("preprocess", ColumnTransformer([
+            ("numeric", "passthrough", numeric),
+            ("categorical", OneHotEncoder(handle_unknown="ignore"),
+             list(CATEGORICAL_FEATURES)),
+        ], remainder="drop")),
+        ("model", XGBRegressor(
+            n_estimators=300, max_depth=4, learning_rate=0.05,
+            subsample=0.8, colsample_bytree=0.8, min_child_weight=5,
+            reg_lambda=5.0, objective="reg:squarederror", tree_method="hist",
+            random_state=42, n_jobs=4,
+        )),
+    ])

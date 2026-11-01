@@ -1,4 +1,4 @@
-﻿# Phase 5: Interpretation, error analysis, ablations and closure
+# Phase 5: Interpretation, error analysis, ablations and closure
 
 ## Evidence and evaluation boundary
 
@@ -99,7 +99,7 @@ what a model could learn without them and could create unrealistic inputs.
 Each ablation independently refitted preprocessing and the estimator on the same
 three fire-grouped training folds, then on all training data for chronological
 validation. Existing full-model hyperparameters were retained; no reduced model
-was independently retuned. This controls one source of variation but does not
+was independently retuned for these initial comparisons. This controls one source of variation but does not
 establish each feature set's best attainable performance. With fractional
 feature sampling, removing columns also changes the number of available sampled
 features even when the hyperparameter value is unchanged.
@@ -151,6 +151,24 @@ could exist. The earlier Ridge2 interaction likewise failed to improve
 validation meaningfully; that failed predictive hypothesis does not erase the
 conditional severity pattern observed in EDA.
 
+## Final bounded no-climate XGBoost retuning check
+
+Saved notebook execution 39 records **50 completed additional Optuna trials**
+on the 18 no-climate predictors using the same three-fold fire-grouped,
+training-only CV; the first trial re-evaluated the original configuration.
+CV MAE improved from **0.06055 to 0.05942 (approximately 1.9%)**, but chronological
+validation MAE slightly worsened from **0.07510 to 0.07525**. Validation R?
+improved from **0.71561 to 0.71882**, and equal-fire MAE from **0.08352 to
+0.08178**. Thus the metrics show a trade-off, not uniform improvement.
+No-climate RF remains the primary-MAE leader at **0.07399**. Retain the
+**original no-climate XGBoost configuration** for the primary comparison and
+preserve the retuned result as a development experiment. Better training-era
+CV did not translate into better chronological MAE; repeated validation reuse
+and a bounded search limit conclusions. This does not establish that further
+XGBoost improvements are impossible. Stop further tuning. Trial history remains
+local and Git-excluded at `mlruns/xgb_no_climate_optuna.csv`; the original MLflow
+runs below still describe the original ablations, not this retuned model.
+
 ## Local experiment provenance
 
 | Ablation | Successful MLflow run |
@@ -195,7 +213,8 @@ reporting. Do not tune using the final test.
 
 Limitations remain: one selected tile per fire; retrospective eligibility;
 nonindependent patches; chronological and geographic distribution shift;
-repeated validation-based selection; no independent reduced-feature retuning;
+repeated validation-based selection; fixed settings for the initial ablations
+and no independent RF reduced-feature retuning;
 and uncertain extrapolation to extreme 2020 conditions. Fire grouping helps
 but cannot remove every environmental dependence. Phase 4 observed test-input
 shift; Phase 5 has not measured test predictive performance.
@@ -216,5 +235,7 @@ shift; Phase 5 has not measured test predictive performance.
   observations versus causal explanations.
 - NBR-only and no-climate hypotheses, retraining versus attribution, fixed
   hyperparameters, CV/chronological disagreement and validation-selection bias.
+- Final 50-trial no-climate retuning: improved CV, mixed validation metrics,
+  unchanged primary XGBoost configuration and why this is not a performance ceiling.
 - Final classical/CNN protocol, frozen refit plan, common population, untouched
   test outcomes, local artifact provenance and safe reload limitations.

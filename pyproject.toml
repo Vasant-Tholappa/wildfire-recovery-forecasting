@@ -23,6 +23,7 @@ dependencies = [
     "pyproj>=3.7.2",
     "rasterio>=1.5.1",
     "scikit-learn>=1.9.1",
+    "shap>=0.54.1",
     "shapely>=2.1.2",
     "xgboost>=3.4.1",
 ]

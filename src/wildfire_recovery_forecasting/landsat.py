@@ -119,26 +119,21 @@ def build_seasonal_nbr(
     }
 
 
-def build_fire_nbr(
+def build_fire_inputs(
     fire, geometry: ee.Geometry, *, reference_projection: ee.Projection,
 ) -> dict[str, ee.Image]:
-    """Build one fire's NBR products from a local manifest row or mapping.
+    """Build prefire/Season-1 images and their existing QA only; no Season 5.
 
-    Read the four manifest year fields directly; do not derive ignition timing.
-    The caller supplies the EE geometry and explicit reference projection, as
-    for build_seasonal_nbr. Outputs are lazy images, not materialized assets.
-
-    QA: nbr_pre_valid is 0/1 support; prefire_selected_year_count is 0-3,
-    retaining incomplete selections where NBR_pre is masked (not the total
-    usable count across all five years). Season 1/5 counts are valid unique
-    dates without additional thresholds. QA is supported within geometry.
-    Each output band's name matches its dictionary key except the three
-    spectral products, whose bands are NBR_pre, NBR_1, and NBR_5.
-    nbr_drop_patch is deferred to Phase 3.6 SQL from separately supported patch means.
+    Uses authoritative manifest search years, including late-ignition windows.
+    Caller supplies computation geometry and the original batch reference grid.
+    This constructs lazy graphs only; it does not initialize EE or evaluate them.
+    nbr_pre_valid is 0/1; selected-year count remains 0-3 even where prefire
+    NBR is masked. Season-1 count is valid unique dates, without a new threshold.
+    Only NBR_pre and NBR_1 are scientific image inputs; the other outputs are QA.
     """
     fields = (
         "prefire_search_start_year", "prefire_search_end_year",
-        "season1_year", "season5_year",
+        "season1_year",
     )
     for field in fields:
         if field not in fire or isinstance(fire[field], bool) or not isinstance(fire[field], Integral):
@@ -171,14 +166,25 @@ def build_fire_nbr(
         .updateMask(valid).rename("NBR_pre").setDefaultProjection(projection)
     )
     season1 = build_seasonal_nbr(int(fire["season1_year"]), geometry, reference_projection=reference_projection)
-    season5 = build_seasonal_nbr(int(fire["season5_year"]), geometry, reference_projection=reference_projection)
-    nbr1, nbr5 = season1["nbr"].rename("NBR_1"), season5["nbr"].rename("NBR_5")
     return {
         "nbr_pre": nbr_pre,
-        "nbr_1": nbr1,
-        "nbr_5": nbr5,
+        "nbr_1": season1["nbr"].rename("NBR_1"),
         "nbr_pre_valid": valid,
         "prefire_selected_year_count": selected_count,
         "season1_obs_count": season1["obs_count"].rename("season1_obs_count"),
-        "season5_obs_count": season5["obs_count"].rename("season5_obs_count"),
     }
+
+
+def build_fire_nbr(
+    fire, geometry: ee.Geometry, *, reference_projection: ee.Projection,
+) -> dict[str, ee.Image]:
+    """Existing production inputs plus Season-5 target/QA, with unchanged science."""
+    if ("season5_year" not in fire or isinstance(fire["season5_year"], bool)
+            or not isinstance(fire["season5_year"], Integral)):
+        raise ValueError("Manifest requires an integer season5_year")
+    result = build_fire_inputs(fire, geometry, reference_projection=reference_projection)
+    season5 = build_seasonal_nbr(
+        int(fire["season5_year"]), geometry, reference_projection=reference_projection,
+    )
+    return {**result, "nbr_5": season5["nbr"].rename("NBR_5"),
+            "season5_obs_count": season5["obs_count"].rename("season5_obs_count")}

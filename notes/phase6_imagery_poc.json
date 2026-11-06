@@ -1,0 +1,145 @@
+{
+  "version": "phase6_nbr_context_poc_v1",
+  "project": "ee-wildfire-recovery-vasant",
+  "proposed_tasks": 4,
+  "selection_reason": "Input-only small pair: 2017 late-ignition training fire and 2018 validation fire; 104 versus 215 eligible patches. No targets or model results used.",
+  "source_hashes": {
+    "C:\\F copy\\wildfire-recovery-forecasting\\data\\processed\\phase3_ca175_tile1_v1.parquet": "a81477f0bcbfb44896f91b2756066a8b4a1a9e918d86a7d25cbd2c11c0382c14",
+    "C:\\F copy\\wildfire-recovery-forecasting\\data\\processed\\phase3_ca175_tile1_v1_batches.parquet": "221844d4cbaf199f1a3dba9f666edc748b42ac587fe0c2bfef91a91a7fb79355",
+    "C:\\F copy\\wildfire-recovery-forecasting\\data\\processed\\phase3_ca175_tile1_v1.json": "66f507b3de85d38214a9fce34d9c434072c384409c7e8540fc518c71010cac0d"
+  },
+  "eligible_file": "C:\\F copy\\wildfire-recovery-forecasting\\data\\processed\\patch_model_eligible_terrain_v2.parquet",
+  "candidates": [
+    {
+      "fire_id": "CA3839112224120171009",
+      "batch_id": "r187_c-209",
+      "fire_year": 2017,
+      "split": "train",
+      "eligible_patch_count": 104,
+      "original_batch_patch_count": 1335,
+      "original_batch_keys_sha256": "16c4dac9345f9a4163014332a93ee8f163df094fdc3bb503fb4330a80cea6da3",
+      "eligible_keys_sha256": "5e39853fb14336fc8971a1a9b44e1c76f8f8a5c7febde9d57b3146116eebea18",
+      "context_extends_outside_fire": true,
+      "width": 84,
+      "height": 204,
+      "exports": {
+        "nbrpre": {
+          "band": "NBR_pre",
+          "crs": "EPSG:5070",
+          "crsTransform": [
+            30.0,
+            0.0,
+            -2248740.0,
+            0.0,
+            -30.0,
+            2026440.0
+          ],
+          "region_epsg5070": [
+            -2248740,
+            2020320,
+            -2246220,
+            2026440
+          ],
+          "fileFormat": "GeoTIFF",
+          "nodata": -9999,
+          "validity_band": "valid",
+          "sampling": "nearest (POC verification required)",
+          "source_reference": "UNRESOLVED: original exact batch Season-1 L8 reference",
+          "bucket": "ee-wildfire-recovery-vasant-data",
+          "fileNamePrefix": "imagery/phase6_nbr_context_poc_v1/CA3839112224120171009/r187_c-209/nbrpre"
+        },
+        "season1": {
+          "band": "NBR_1",
+          "crs": "EPSG:5070",
+          "crsTransform": [
+            30.0,
+            0.0,
+            -2248740.0,
+            0.0,
+            -30.0,
+            2026440.0
+          ],
+          "region_epsg5070": [
+            -2248740,
+            2020320,
+            -2246220,
+            2026440
+          ],
+          "fileFormat": "GeoTIFF",
+          "nodata": -9999,
+          "validity_band": "valid",
+          "sampling": "nearest (POC verification required)",
+          "source_reference": "UNRESOLVED: original exact batch Season-1 L8 reference",
+          "bucket": "ee-wildfire-recovery-vasant-data",
+          "fileNamePrefix": "imagery/phase6_nbr_context_poc_v1/CA3839112224120171009/r187_c-209/season1"
+        }
+      }
+    },
+    {
+      "fire_id": "CA3839611945120180904",
+      "batch_id": "r180_c-186",
+      "fire_year": 2018,
+      "split": "validation",
+      "eligible_patch_count": 215,
+      "original_batch_patch_count": 1135,
+      "original_batch_keys_sha256": "4dc29ad9a1e87b37874bd49f65db7a16f0d0c1f562e97ab74ed33cf5f735fdf5",
+      "eligible_keys_sha256": "08b1ee4d7b16f256c82633c4ab0a12f7918acf24ffd786dc701dfe511e98f284",
+      "context_extends_outside_fire": true,
+      "width": 162,
+      "height": 138,
+      "exports": {
+        "nbrpre": {
+          "band": "NBR_pre",
+          "crs": "EPSG:5070",
+          "crsTransform": [
+            30.0,
+            0.0,
+            -2007270.0,
+            0.0,
+            -30.0,
+            1954980.0
+          ],
+          "region_epsg5070": [
+            -2007270,
+            1950840,
+            -2002410,
+            1954980
+          ],
+          "fileFormat": "GeoTIFF",
+          "nodata": -9999,
+          "validity_band": "valid",
+          "sampling": "nearest (POC verification required)",
+          "source_reference": "UNRESOLVED: original exact batch Season-1 L8 reference",
+          "bucket": "ee-wildfire-recovery-vasant-data",
+          "fileNamePrefix": "imagery/phase6_nbr_context_poc_v1/CA3839611945120180904/r180_c-186/nbrpre"
+        },
+        "season1": {
+          "band": "NBR_1",
+          "crs": "EPSG:5070",
+          "crsTransform": [
+            30.0,
+            0.0,
+            -2007270.0,
+            0.0,
+            -30.0,
+            1954980.0
+          ],
+          "region_epsg5070": [
+            -2007270,
+            1950840,
+            -2002410,
+            1954980
+          ],
+          "fileFormat": "GeoTIFF",
+          "nodata": -9999,
+          "validity_band": "valid",
+          "sampling": "nearest (POC verification required)",
+          "source_reference": "UNRESOLVED: original exact batch Season-1 L8 reference",
+          "bucket": "ee-wildfire-recovery-vasant-data",
+          "fileNamePrefix": "imagery/phase6_nbr_context_poc_v1/CA3839611945120180904/r180_c-186/season1"
+        }
+      }
+    }
+  ],
+  "live_gate": "Reference scene/projection, masks, output alignment, sampling, quota and cost unresolved; no tasks created."
+}

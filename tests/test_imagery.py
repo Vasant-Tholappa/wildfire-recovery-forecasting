@@ -56,7 +56,7 @@ def test_bad_identifiers_rejected():
         with pytest.raises(ValueError): imagery.prepare_region(bad,fire_id='fire',batch_id='r0_c0')
 
 
-@pytest.mark.parametrize('ignition,last',[(date(2017,9,30),2016),(date(2017,10,1),2017)])
+@pytest.mark.parametrize('ignition,last',[(date(2017,9,30),2016),(date(2017,10,1),2017),(date(2020,9,30),2019),(date(2020,10,1),2020)])
 def test_inputs_preserve_late_ignition_without_season5(ignition,last):
     fire=derive_fire_fields(ignition)
     fire.pop('season5_year')  # The input interface neither needs nor reads it.
@@ -67,7 +67,7 @@ def test_inputs_preserve_late_ignition_without_season5(ignition,last):
         api.ImageCollection.fromImages.return_value.median.side_effect=lambda:PixelImage(
             np.ma.median(np.ma.stack([x.values for x in api.ImageCollection.fromImages.call_args.args[0]]),axis=0))
         result=landsat.build_fire_inputs(fire,'buffered context',reference_projection=api.Projection())
-        assert [c.args[0] for c in build.call_args_list]==list(range(last,last-5,-1))+[2018]
+        assert [c.args[0] for c in build.call_args_list]==list(range(last,last-5,-1))+[ignition.year+1]
         assert set(result)=={'nbr_pre','nbr_1','nbr_pre_valid','prefire_selected_year_count','season1_obs_count'}
         np.testing.assert_allclose(result['nbr_pre'].values,[(last-1)/10000])
         assert all(c.args[1]=='buffered context' for c in build.call_args_list)

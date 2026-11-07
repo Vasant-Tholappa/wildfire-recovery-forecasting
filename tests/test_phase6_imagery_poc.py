@@ -21,7 +21,7 @@ def fixture():
     return fire, rows, record
 
 
-@pytest.mark.parametrize('year', [2017, 2018])
+@pytest.mark.parametrize('year', [2015, 2016, 2017, 2018, 2019, 2020])
 def test_adapter_uses_exact_reference_and_buffered_inputs_without_tasks(year):
     fire, rows, record = fixture()
     fire.update(ignition_date=date(year,10,9), **derive_fire_fields(date(year,10,9)))
@@ -31,7 +31,7 @@ def test_adapter_uses_exact_reference_and_buffered_inputs_without_tasks(year):
     with patch.dict('sys.modules', {'ee': api}), patch.object(pipeline,'patches_to_ee') as convert, \
             patch.object(landsat,'build_fire_inputs') as build:
         build.return_value = {'nbr_pre':MagicMock(), 'nbr_1':MagicMock()}
-        args = poc.image_export_arguments(fire, rows, rows, frozen_record=record)
+        args = poc.image_export_arguments(fire, rows, rows, frozen_record=record, allow_test_inputs=(year==2020))
         exact = convert.return_value.geometry.return_value
         api.ImageCollection.return_value.filterBounds.assert_called_once_with(exact)
         api.ImageCollection.return_value.filterBounds.return_value.filterDate.assert_called_once_with(f'{year+1}-06-01',f'{year+1}-10-01')
@@ -80,3 +80,20 @@ def test_saved_poc_contract():
             assert spec['crs']=='EPSG:5070'
             prefixes.append(spec['fileNamePrefix'])
     assert len(set(prefixes))==4
+
+
+@pytest.mark.parametrize('year', range(2015,2021))
+def test_authorization_never_bypasses_occupancy(year):
+    fire,rows,record=fixture()
+    fire.update(ignition_date=date(year,10,9),**derive_fire_fields(date(year,10,9)))
+    rows['fire_year']=year;rows['split']=fire['split']
+    with pytest.raises(ValueError,match='occupancy'):
+        poc.validate_candidate(fire,rows,rows,2,allow_test_inputs=True)
+    poc.validate_candidate(fire,rows,rows,1,allow_test_inputs=True)
+    if year==2020:
+        with pytest.raises(ValueError,match='authorization'):poc.validate_candidate(fire,rows,rows,1)
+        with patch.dict('sys.modules', {'ee':MagicMock()}), patch.object(landsat,'build_fire_inputs') as build:
+            with pytest.raises(ValueError,match='authorization'):
+                poc.image_export_arguments(fire,rows,rows,frozen_record=record)
+            build.assert_not_called()
+    else:poc.validate_candidate(fire,rows,rows,1)

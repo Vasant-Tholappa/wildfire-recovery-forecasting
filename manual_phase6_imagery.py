@@ -21,13 +21,15 @@ def key_digest(ids):
     return hashlib.sha256('\n'.join(sorted(ids)).encode()).hexdigest()
 
 
-def validate_candidate(fire, patches, rows, expected_count):
+def validate_candidate(fire, patches, rows, expected_count, *, allow_test_inputs=False):
     expected = derive_fire_fields(pd.Timestamp(fire['ignition_date']))
     for name in ('fire_year', 'split', 'prefire_search_start_year', 'prefire_search_end_year', 'season1_year'):
         if fire[name] != expected[name]:
             raise ValueError('Frozen temporal fields disagree with ignition date')
-    if expected['split'] == 'test' or len(patches) != expected_count:
-        raise ValueError('Test fire or wrong canonical batch occupancy')
+    if expected['split'] == 'test' and not allow_test_inputs:
+        raise ValueError('Test input imagery requires explicit authorization')
+    if len(patches) != expected_count:
+        raise ValueError('Wrong canonical batch occupancy')
     if (rows.empty or not rows.patch_id.is_unique
             or not set(rows.patch_id).issubset(set(patches.patch_id))
             or not rows.fire_year.eq(expected['fire_year']).all()
@@ -81,7 +83,7 @@ def reference_band(fire, original_patches):
         .sort('system:time_start').first()).select('SR_B5')
 
 
-def image_export_arguments(fire, original_patches, eligible_rows, *, frozen_record, reference_projection=None):
+def image_export_arguments(fire, original_patches, eligible_rows, *, frozen_record, reference_projection=None, allow_test_inputs=False):
     """Build lazy EE images/arguments only, after separate live authorization.
 
     No initialization, metadata evaluation, task creation or submission. The
@@ -93,7 +95,7 @@ def image_export_arguments(fire, original_patches, eligible_rows, *, frozen_reco
     from wildfire_recovery_forecasting import landsat, pipeline
 
     region = validate_candidate(fire, original_patches, eligible_rows,
-                                frozen_record['original_batch_patch_count'])
+                                frozen_record['original_batch_patch_count'], allow_test_inputs=allow_test_inputs)
     if (fire['fire_id'] != frozen_record['fire_id']
             or original_patches.batch_id.nunique() != 1
             or original_patches.batch_id.iloc[0] != frozen_record['batch_id']

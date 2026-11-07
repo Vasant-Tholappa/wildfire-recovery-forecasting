@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 import json
 import math
 import os
+import time
 from pathlib import Path
 
 import pandas as pd
@@ -64,13 +65,27 @@ def reject_duplicates(tasks, client, record):
             raise RuntimeError('Destination objects already exist; no submission')
 
 
+class AtomicSaveError(PermissionError):
+    """Replacement failed; retain the fsynced temporary file for recovery."""
+
+
 def save(path, state):
     temporary = path.with_suffix('.tmp')
     with temporary.open('w', encoding='utf-8') as handle:
         json.dump(state, handle, indent=2)
         handle.flush()
         os.fsync(handle.fileno())
-    os.replace(temporary, path)
+    for attempt in range(5):
+        try:
+            os.replace(temporary, path)
+            return
+        except PermissionError as error:
+            if attempt == 4:
+                raise AtomicSaveError(
+                    f'Atomic replacement failed; stop and reconcile before resuming. '
+                    f'Recovery evidence retained at {temporary}; destination={path}'
+                ) from error
+            time.sleep(0.1 * 2**attempt)
 
 
 EXPECTED_REFERENCES = {'2017': ('LC08_044033_20180601', 'EPSG:32610'),

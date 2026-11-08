@@ -118,7 +118,8 @@ def test_cli_smoke_is_synthetic_and_logs_locally(tmp_path,monkeypatch):
     from unittest.mock import MagicMock
     import manual_phase6_train as cli
     tracker=MagicMock()
-    tracker.active_run.return_value.info.run_id='synthetic-id'
+    tracker.active_run.return_value = None
+    tracker.start_run.return_value.info.run_id = 'synthetic-id'
     monkeypatch.setitem(sys.modules,'mlflow',tracker)
     monkeypatch.setattr(cli,'ROOT',tmp_path)
     monkeypatch.setattr(sys,'argv',['manual_phase6_train.py','--model','fusion','--smoke-test','--threads','1'])

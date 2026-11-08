@@ -6,7 +6,6 @@ import json
 import os
 from pathlib import Path
 import subprocess
-import time
 import uuid
 
 import numpy as np
@@ -94,39 +93,18 @@ def main():
         metadata['git_dirty'] = bool(subprocess.check_output(['git','status','--porcelain'],cwd=ROOT,text=True,stderr=subprocess.DEVNULL).strip())
     except (OSError, subprocess.CalledProcessError):
         metadata['git_commit'] = 'unavailable'
-    import mlflow
-    mlflow.set_tracking_uri('sqlite:///' + (ROOT/'mlflow.db').as_posix())
-    mlflow.set_experiment('P1 - Wildfire Recovery - Phase 6')
-    with mlflow.start_run(run_name=('synthetic_smoke_' if args.smoke_test else '')+args.model):
-        mlflow.log_params(metadata)
-        mlflow.set_tag('synthetic_smoke', str(args.smoke_test))
-        if args.study_name is not None:
-            mlflow.set_tag('optuna.study_name', args.study_name)
-            mlflow.set_tag('optuna.trial_number', str(args.trial_number))
-        epoch_seconds = []
-        def log_epoch(record):
-            epoch_seconds.append(record['seconds'])
-            mlflow.log_metrics({k:v for k,v in record.items() if k!='epoch'},step=record['epoch'])
-            print(json.dumps(record),flush=True)
-        started = time.monotonic()
-        result = fit(model, train_loader, val_loader, device, output,
-                     epochs=args.max_epochs, lr=args.learning_rate, weight_decay=args.weight_decay,
-                     patience=args.patience, min_delta=args.min_delta, log_epoch=log_epoch)
-        fit_seconds = time.monotonic() - started
-        (output/'configuration.json').write_text(json.dumps(metadata,indent=2))
-        (output/'architecture.txt').write_text(str(model))
-        if not args.smoke_test:
-            # Small provenance/schema files only; no datasets or test artifacts.
-            for name in ('manifest.json','tabular_preprocessing.json'):
-                mlflow.log_artifact(str(args.data_root/name),artifact_path='dataset_metadata')
-        mlflow.log_metrics({'best_epoch':result['best_epoch'],
-                           'epochs_completed':result['epochs_completed'],
-                           'epoch_seconds_total':sum(epoch_seconds), 'fit_seconds':fit_seconds,
-                           **{'best_val_'+k:v for k,v in result['best_validation'].items()}})
-        mlflow.set_tag('best_checkpoint', 'training/best_state.pt')
-        mlflow.set_tag('best_checkpoint_sha256', hashlib.sha256((output/'best_state.pt').read_bytes()).hexdigest())
-        mlflow.log_artifacts(str(output),artifact_path='training')
-        print(json.dumps(dict(output=str(output),run_id=mlflow.active_run().info.run_id,**result),indent=2))
+    from wildfire_recovery_forecasting.cnn_tracking import tracked_fit
+    tags = {'synthetic_smoke': str(args.smoke_test)}
+    if args.study_name is not None:
+        tags.update({'optuna.study_name':args.study_name, 'optuna.trial_number':str(args.trial_number)})
+    result = tracked_fit(model, train_loader, val_loader, device, output, metadata=metadata,
+                         tracking_uri='sqlite:///' + (ROOT/'mlflow.db').as_posix(),
+                         dataset_root=None if args.smoke_test else args.data_root,
+                         tags=tags, fit_function=fit, epochs=args.max_epochs,
+                         lr=args.learning_rate, weight_decay=args.weight_decay,
+                         patience=args.patience, min_delta=args.min_delta)
+    print(json.dumps(dict(output=str(output), **result), indent=2))
+
 
 
 if __name__ == '__main__':

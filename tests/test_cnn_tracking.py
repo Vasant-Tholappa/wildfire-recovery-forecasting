@@ -10,7 +10,8 @@ import manual_phase6_train as cli
 
 def test_tracking_completeness_and_distinct_trials(tmp_path, monkeypatch):
     tracker = MagicMock()
-    tracker.active_run.return_value.info.run_id = "mock-run-id"
+    tracker.active_run.return_value = None
+    tracker.start_run.return_value.info.run_id = "mock-run-id"
     monkeypatch.setitem(sys.modules, 'mlflow', tracker)
     monkeypatch.setattr(cli, 'ROOT', tmp_path)
     monkeypatch.setattr(cli, 'seed_everything', lambda *a: None)

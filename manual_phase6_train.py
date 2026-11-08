@@ -3,8 +3,10 @@ import argparse
 from datetime import datetime, timezone
 import hashlib
 import json
+import os
 from pathlib import Path
 import subprocess
+import time
 import uuid
 
 import numpy as np
@@ -51,7 +53,14 @@ def main():
     parser.add_argument('--threads', type=int, default=4)
     parser.add_argument('--device', choices=['auto', 'cpu', 'cuda'], default='auto')
     parser.add_argument('--smoke-test', action='store_true', help='One synthetic epoch, 16/8 samples, batch size <=8')
+    parser.add_argument('--study-name', help='Optional future tuning-study identity; requires --trial-number')
+    parser.add_argument('--trial-number', type=int, help='Trial identity; each invocation creates a NEW MLflow run')
     args = parser.parse_args()
+    if os.environ.get("MLFLOW_RUN_ID"):
+        parser.error("Unset MLFLOW_RUN_ID: training must create a new run, not resume historical metrics")
+    if (args.study_name is None) != (args.trial_number is None) or (
+            args.trial_number is not None and (args.trial_number < 0 or not args.study_name.strip())):
+        parser.error('Provide a nonempty study name and nonnegative trial number together')
     if (args.batch_size < 1 or args.max_epochs < 1 or args.patience < 1 or args.threads < 1
             or args.learning_rate <= 0 or args.weight_decay < 0 or args.min_delta < 0
             or not 0 <= args.seed < 2**32
@@ -79,6 +88,7 @@ def main():
                     train_rows=len(train), validation_rows=len(val), parameters=count,
                     torch_version=str(torch.__version__), numpy_version=np.__version__,
                     deterministic_algorithms=True, num_workers=0, **provenance)
+    metadata.update(optimizer='AdamW', training_loss='MSE', selection_metric='val_mae')
     try:
         metadata['git_commit'] = subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True,stderr=subprocess.DEVNULL).strip()
         metadata['git_dirty'] = bool(subprocess.check_output(['git','status','--porcelain'],cwd=ROOT,text=True,stderr=subprocess.DEVNULL).strip())
@@ -90,12 +100,19 @@ def main():
     with mlflow.start_run(run_name=('synthetic_smoke_' if args.smoke_test else '')+args.model):
         mlflow.log_params(metadata)
         mlflow.set_tag('synthetic_smoke', str(args.smoke_test))
+        if args.study_name is not None:
+            mlflow.set_tag('optuna.study_name', args.study_name)
+            mlflow.set_tag('optuna.trial_number', str(args.trial_number))
+        epoch_seconds = []
         def log_epoch(record):
+            epoch_seconds.append(record['seconds'])
             mlflow.log_metrics({k:v for k,v in record.items() if k!='epoch'},step=record['epoch'])
             print(json.dumps(record),flush=True)
+        started = time.monotonic()
         result = fit(model, train_loader, val_loader, device, output,
                      epochs=args.max_epochs, lr=args.learning_rate, weight_decay=args.weight_decay,
                      patience=args.patience, min_delta=args.min_delta, log_epoch=log_epoch)
+        fit_seconds = time.monotonic() - started
         (output/'configuration.json').write_text(json.dumps(metadata,indent=2))
         (output/'architecture.txt').write_text(str(model))
         if not args.smoke_test:
@@ -103,7 +120,11 @@ def main():
             for name in ('manifest.json','tabular_preprocessing.json'):
                 mlflow.log_artifact(str(args.data_root/name),artifact_path='dataset_metadata')
         mlflow.log_metrics({'best_epoch':result['best_epoch'],
+                           'epochs_completed':result['epochs_completed'],
+                           'epoch_seconds_total':sum(epoch_seconds), 'fit_seconds':fit_seconds,
                            **{'best_val_'+k:v for k,v in result['best_validation'].items()}})
+        mlflow.set_tag('best_checkpoint', 'training/best_state.pt')
+        mlflow.set_tag('best_checkpoint_sha256', hashlib.sha256((output/'best_state.pt').read_bytes()).hexdigest())
         mlflow.log_artifacts(str(output),artifact_path='training')
         print(json.dumps(dict(output=str(output),run_id=mlflow.active_run().info.run_id,**result),indent=2))
 

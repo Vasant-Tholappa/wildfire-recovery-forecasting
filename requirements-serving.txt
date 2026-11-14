@@ -1,0 +1,26 @@
+# Serving-only pins from the frozen-model environment; no training/EE/torch stack.
+annotated-doc==0.0.5
+annotated-types==0.8.0
+anyio==4.14.2
+click==8.4.2
+fastapi==0.162.0
+uvicorn==0.54.0
+pydantic==2.14.1
+cloudpickle==3.1.2
+numpy==2.5.2
+pandas==3.0.5
+scipy==1.18.1
+scikit-learn==1.9.1
+joblib==1.6.0
+threadpoolctl==3.7.0
+starlette==1.10.0
+pydantic-core==2.50.1
+typing-extensions==4.16.0
+typing-inspection==0.4.4
+opentelemetry-api==1.45.1
+h11==0.16.0
+idna==3.19
+narwhals==2.24.0
+python-dateutil==2.9.0.post0
+six==1.17.0
+# XGBoost installed separately with --no-deps to omit unused Linux CUDA packages.

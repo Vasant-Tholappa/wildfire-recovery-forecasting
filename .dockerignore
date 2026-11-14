@@ -1,0 +1,8 @@
+# Allowlist: no data, models, private notes, credentials or experiment history.
+**
+!Dockerfile
+!requirements-serving.txt
+!src/
+!src/wildfire_recovery_forecasting/
+!src/wildfire_recovery_forecasting/__init__.py
+!src/wildfire_recovery_forecasting/api.py

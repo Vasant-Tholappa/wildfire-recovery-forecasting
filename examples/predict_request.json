@@ -1,0 +1,20 @@
+{
+  "nbr_pre_mean": 0.5,
+  "dominant_evt": 3008,
+  "dominant_evt_fraction": 0.9,
+  "tree_cover_mean": 50.0,
+  "tree_height_mean": 10.0,
+  "elevation_mean": 1000.0,
+  "slope_mean": 20.0,
+  "northness_mean": 0.0,
+  "eastness_mean": 0.0,
+  "fire_size_acres": 10000.0,
+  "ignition_month": 8,
+  "mtbs_unburned_low_fraction": 0.1,
+  "mtbs_low_fraction": 0.2,
+  "mtbs_moderate_fraction": 0.3,
+  "mtbs_high_fraction": 0.4,
+  "mtbs_increased_greenness_fraction": 0.0,
+  "nbr_1_mean": 0.2,
+  "nbr_drop_patch": 0.3
+}

@@ -1,0 +1,28 @@
+{
+  "version": "explorer-v1",
+  "decision": "C",
+  "rows": 30606,
+  "fires": 37,
+  "ordered_keys_sha256": "dddc96134b7d1ac581632e673ccdeff70dd990428373f890cb14658e4948ec42",
+  "source_hashes": {
+    "predictions": "3e99407300b72aa9fcb2e136d07e969d3d8ea6fdbec062f7879ff91f4ce1c6bd",
+    "metrics": "e87b1e0a4fcb845ce34c5ac1d21b916008442a33564379beb68f3f4abc3b225c",
+    "per_fire": "77575acf7a1887ea97877d630dd0b7343b77aec164c11bce43597910da706161",
+    "audit": "f839ae4819e6f3088196d4fc15c01df7dc3c09c63aa900e98ce3d5f13e4cb473",
+    "baselines": "a3c0d47e2cf848d3ba36a6fe3a11e5a7d051aefd519f902aef954aa53bd040cd",
+    "reductions": "e6d528dbbe05eb5af5216ba4333dae8e24aed6c408a07bf9ad80d8d38d9dc457",
+    "baseline_audit": "da3145d6aaf88af8f4767d55bbc15d68efb021267be8c1aae3e50ec15d9b634f",
+    "index": "35e4468f7071b33360819e4ac1f9a870801429f6b6e66fff2c109d4914b6d9c9",
+    "fires": "6fdd8b48d4afe5de1a5df9120695ef8d2d84bd2b1779ed01d4433ca2b36eee69",
+    "population": "5e27951fe1bde2dcc22f60af3df44de62034676cc0421a016e23ce5960100634"
+  },
+  "geometry": "90m EPSG:5070 zero-anchored grid; corners/centers transformed to EPSG:4326. Fire markers are MTBS interior representative points, not ignition locations.",
+  "sampling": "All 30606 evaluated patches; no spatial display subsampling.",
+  "values": "Unchanged saved outcomes and four Option A predictions. No inference or performance rescore.",
+  "files": {
+    "fires.csv": "f569405fcfb9a9ffe04f82c58be1408983ef08c8a54559f44717c9e99feb03c6",
+    "patches.csv.gz": "2869ae5a413ce3166588f52e32e7858c5d618091ac6d80d5265396706643cf42",
+    "per_fire.csv": "0795ebc0cf1005a95a8d82fa0e717930acd3d06e89cefb34f66f114826001325",
+    "summary.json": "fb821906274af5e977e760020d92b77b57a1b610ef9a46f564af4690fc06f78f"
+  }
+}

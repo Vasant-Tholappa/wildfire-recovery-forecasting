@@ -14,14 +14,15 @@
     "baseline_audit": "da3145d6aaf88af8f4767d55bbc15d68efb021267be8c1aae3e50ec15d9b634f",
     "index": "35e4468f7071b33360819e4ac1f9a870801429f6b6e66fff2c109d4914b6d9c9",
     "fires": "6fdd8b48d4afe5de1a5df9120695ef8d2d84bd2b1779ed01d4433ca2b36eee69",
-    "population": "5e27951fe1bde2dcc22f60af3df44de62034676cc0421a016e23ce5960100634"
+    "population": "5e27951fe1bde2dcc22f60af3df44de62034676cc0421a016e23ce5960100634",
+    "year1": "a8770882a8b3b18e8911efddbd7ea74ae50fee9265ae0275ebeac034895ac535"
   },
   "geometry": "90m EPSG:5070 zero-anchored grid; corners/centers transformed to EPSG:4326. Fire markers are MTBS interior representative points, not ignition locations.",
   "sampling": "All 30606 evaluated patches; no spatial display subsampling.",
-  "values": "Unchanged saved outcomes and four Option A predictions. No inference or performance rescore.",
+  "values": "Unchanged saved outcomes and four Option A predictions. No inference or performance rescore. Exact saved nbr_1_mean added by ordered unique keys; original CSV fields unchanged.",
   "files": {
     "fires.csv": "f569405fcfb9a9ffe04f82c58be1408983ef08c8a54559f44717c9e99feb03c6",
-    "patches.csv.gz": "2869ae5a413ce3166588f52e32e7858c5d618091ac6d80d5265396706643cf42",
+    "patches.csv.gz": "1856b08056cc299627ea4a9d77de8c7e39976db46ce1fc7cfeb46c2cfeb79a4c",
     "per_fire.csv": "0795ebc0cf1005a95a8d82fa0e717930acd3d06e89cefb34f66f114826001325",
     "summary.json": "fb821906274af5e977e760020d92b77b57a1b610ef9a46f564af4690fc06f78f"
   }

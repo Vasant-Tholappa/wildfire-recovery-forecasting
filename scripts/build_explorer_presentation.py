@@ -25,6 +25,7 @@ def build():
         'baselines': test/'supplemental_baselines_v1/baseline_metrics.csv',
         'reductions': test/'supplemental_baselines_v1/model_mae_reductions.csv',
         'baseline_audit': test/'supplemental_baselines_v1/supplemental_audit.json',
+        'year1': base/'phase6_cnn_dataset_v1/test/tabular.parquet',
         'index': base/'phase6_cnn_dataset_v1/test/index.parquet',
         'fires': base/'fire_manifest.parquet', 'population': base/'phase6_nbr_context_v1_manifest.json',
     }
@@ -53,6 +54,10 @@ def build():
     # Existing canonical lattice only: no fire-grid regeneration or extraction.
     transform = Transformer.from_crs(5070,4326,always_xy=True)
     patches = pred.copy()
+    early=pd.read_parquet(sources['year1'],columns=KEYS+['nbr_1_mean'])
+    assert early[KEYS].equals(pred[KEYS]) and not early.duplicated(KEYS).any()
+    assert np.isfinite(early.nbr_1_mean).all()
+    patches['nbr_1_mean']=early.nbr_1_mean
     patches['lon'],patches['lat']=transform.transform((ix.grid_col+.5)*90,(ix.grid_row+.5)*90)
     for i,(dx,dy) in enumerate(((0,0),(1,0),(1,1),(0,1))):
         patches[f'x{i}'],patches[f'y{i}']=transform.transform((ix.grid_col+dx)*90,(ix.grid_row+dy)*90)

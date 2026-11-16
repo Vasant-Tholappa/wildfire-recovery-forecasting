@@ -149,6 +149,33 @@ def test_hero_asset_and_timeline_placement():
     assert 'alt="False-color Landsat' in source and 'not a project prediction' in source
 
 
+def test_hero_source_links_open_new_tab():
+    from html.parser import HTMLParser
+
+    class Anchors(HTMLParser):
+        def __init__(self):
+            super().__init__()
+            self.links = []
+
+        def handle_starttag(self, tag, attrs):
+            if tag == 'a':
+                self.links.append(dict(attrs))
+
+    app = AppTest.from_file(str(Path('explorer/streamlit_app.py').resolve()), default_timeout=30).run()
+    assert not app.exception
+    hero = next(e.proto.body for e in app.get('html') if '<div class="hero">' in e.proto.body)
+    parser = Anchors()
+    parser.feed(hero)
+    for url in (
+        'https://www.fire.ca.gov/our-impact/statistics',
+        'https://science.nasa.gov/earth/earth-observatory/bobcat-fire-scorches-southern-california-147324/',
+    ):
+        matches = [a for a in parser.links if a.get('href') == url]
+        assert len(matches) == 1
+        assert matches[0]['target'] == '_blank'
+        assert set(matches[0]['rel'].split()) == {'noopener', 'noreferrer'}
+
+
 def test_best_fire_saved_scores_and_missing_ties():
     from explorer.views import best_fire_models
     fires,_,scores,_=load_public()

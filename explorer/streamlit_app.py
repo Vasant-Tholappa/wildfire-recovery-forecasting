@@ -62,13 +62,13 @@ st.html(f'''<div class="hero"><div class="hero-top"><div class="eyebrow">CALIFOR
 <div class="hero-links"><span class="hero-wordmark">AFTER THE FIRE</span><a href="https://github.com/Vasant-Tholappa/wildfire-recovery-forecasting" target="_blank" rel="noopener noreferrer">View project on GitHub ↗</a></div></div>
 <div class="hero-grid"><div><h1>Predicting California's Wildfire<br class="hero-title-break"> Recovery with Machine Learning</h1>
 <p>California wildfires have burned millions of acres in recent years.
-<a class="source" href="https://www.fire.ca.gov/our-impact/statistics" title="CAL FIRE: five-year average of 1,103,821 acres for comparable year-to-date intervals through November 11, reported November 11, 2026; preliminary, not a full-year average.">CAL FIRE source</a></p>
+<a class="source" href="https://www.fire.ca.gov/our-impact/statistics" target="_blank" rel="noopener noreferrer" title="CAL FIRE: five-year average of 1,103,821 acres for comparable year-to-date intervals through November 11, reported November 11, 2026; preliminary, not a full-year average.">CAL FIRE source</a></p>
 <p>Fire can transform a landscape in days. Understanding how vegetation recovers can take years.</p>
 <p class="question"><strong>What if we could predict what comes next?</strong></p>
 <p>I built machine-learning models using satellite imagery and environmental data to predict vegetation conditions five years after a wildfire—using information available just one year after it.</p>
 </div><figure class="hero-visual"><img src="data:image/webp;base64,{hero_image()}" width="900" height="1000" alt="False-color Landsat view of California's Bobcat Fire: a red-brown burn scar surrounded by green vegetation in the San Gabriel Mountains, September 21, 2020.">
 <figcaption>California wildfire burn scar · illustrative, not a project prediction.<br>
-<a href="https://science.nasa.gov/earth/earth-observatory/bobcat-fire-scorches-southern-california-147324/">NASA Earth Observatory / Lauren Dauphin</a> · Landsat data: USGS</figcaption></figure></div></div>''')
+<a href="https://science.nasa.gov/earth/earth-observatory/bobcat-fire-scorches-southern-california-147324/" target="_blank" rel="noopener noreferrer">NASA Earth Observatory / Lauren Dauphin</a> · Landsat data: USGS</figcaption></figure></div></div>''')
 reduction=next(r for r in summary['reductions'] if r['model']=='option_a_xgb')
 st.html(f'''<div class="hero-stats">
 <div class="hero-stat"><h2>151</h2><strong>California wildfires studied</strong><p>2015–2020 fires · vegetation observations through 2025</p></div>

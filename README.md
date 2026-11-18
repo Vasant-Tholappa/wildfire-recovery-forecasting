@@ -58,21 +58,17 @@ The scientific experiment archive retains **eight fitted model records across tw
 ## From source data to a usable application
 
 ```mermaid
-flowchart TD
-    A[Earth Engine: Landsat, MTBS, LANDFIRE, terrain, Daymet and LCMS QA] --> B[Partitioned exports and durable task records]
-    B --> C[Parquet materialization, BigQuery assembly and quality checks]
-    C --> D[Frozen patch keys, eligibility and chronological splits]
-    B --> E[Regional NBR rasters and local 15 x 15 chip QA]
-    D --> F[Tabular ML and CNN / fusion training]
-    E --> F
-    F --> G[Frozen models and independent 2020 evaluation]
-    G --> H[Saved predictions and curated presentation data]
-    H --> I[Streamlit dashboard: publicly deployed]
-    G --> J[Frozen XGBoost with fitted preprocessing]
-    J --> K[FastAPI + Docker: locally verified only]
+flowchart LR
+    A["Earth Engine<br/>Imagery + environment"] --> B["Exports + processing<br/>Parquet / BigQuery / QA"]
+    B --> C["Frozen splits<br/>Tree + neural models"]
+    C --> D["Independent<br/>2020 evaluation"]
+    D --> E["Saved predictions"]
+    E --> F["Streamlit<br/>Public dashboard"]
+    D --> G["Frozen XGBoost<br/>Fitted preprocessing"]
+    G --> H["FastAPI + Docker<br/>Locally verified"]
 ```
 
-I used explicit projected grids, validity masks, key checks and materialized exports to keep imagery, tabular features and targets aligned. Regional imagery exports were cropped locally into two-channel 15 × 15 chips; their central 3 × 3 pixels correspond to each 90 m prediction patch. Missing-pixel preprocessing was fitted on training data only.
+Landsat, MTBS, LANDFIRE, terrain, Daymet and LCMS supplied imagery, environmental measurements and quality checks. Shared geographic grids, validity masks and unique patch keys kept imagery, tabular features and targets aligned. Regional rasters were cropped locally into two-channel 15 × 15 chips; the central 3 × 3 pixels represent each 90 m prediction patch. Missing-pixel preprocessing was fitted on training data only.
 
 The final tabular comparison uses **18 no-climate predictors**; fusion receives their 70 encoded/scaled columns alongside imagery. Daymet was part of source engineering and earlier analysis, not the final no-climate serving model. LCMS supports retrospective eligibility/QA rather than acting as a prediction feature.
 
@@ -89,7 +85,7 @@ The final tabular comparison uses **18 no-climate predictors**; fusion receives 
 | Applications | FastAPI, Pydantic, Uvicorn, Docker; Streamlit Community Cloud, PyDeck and Plotly; [inference guide](docs/inference_service.md), [dashboard guide](explorer/README.md) |
 | Reproducibility | Python 3.12, uv lockfile, manifests/checksums and pytest; [tests](tests), [public-data packager](scripts/build_explorer_presentation.py) |
 
-`notebooks/` preserves source proofs of concept and modeling exploration; `notes/` contains public engineering decisions. All 30 original research operators are archived, byte-for-byte, in [`scripts/research_operators/`](scripts/research_operators/README.md). They are source evidence, not runnable entrypoints in the reorganized layout. Use the preserved research revision for historical commands, imports and source-hash checks. Some operators initiate cloud work; do not run them merely to explore this portfolio.
+`notebooks/` preserves source proofs of concept and modeling exploration; `notes/` contains public engineering decisions. All 30 original research operators are preserved unchanged in [`scripts/research_operators/`](scripts/research_operators/README.md). They document the research but require the [original layout](#historical-research-layout) to run. Some initiate cloud work; they are not needed to explore this portfolio.
 
 ## Run the dashboard locally
 

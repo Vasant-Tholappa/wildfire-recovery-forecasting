@@ -1,16 +1,16 @@
 # Archived research operators
 
-These 30 files preserve the original research source **byte-for-byte**. They were relocated for repository navigation, not refactored into a new runnable package. The public Streamlit app and local FastAPI/Docker service do not import them.
+These 30 Python operators and one historical PowerShell launcher preserve the original research source **byte-for-byte**. They were relocated for repository navigation, not refactored into a new runnable package. The public Streamlit app and local FastAPI/Docker service do not depend on them.
 
 ## Original working snapshot
 
 - Verified pre-reorganization commit: `cbd13f167393098e4a7735ecb2e5fdcef4d1a199`.
-- Annotated local tag: `research-v1-working`, created at the verified pre-reorganization commit using the repository-local GitHub noreply identity. The tag has not been pushed or published.
+- Published annotated tag: `research-v1-working`, at the verified pre-reorganization commit.
 - This snapshot preserves the code layout, not the private data, fitted models, MLflow/Optuna records or Python environment.
 
 For historical workflows, use a **separate** checkout at the commit above. Do not switch or overwrite a working directory that contains valuable local artifacts. Reuse excluded artifacts only after checking the original recorded paths and environment requirements.
 
-Root-level commands in historical notes, notebooks and `run_population_continuous.ps1` apply to that snapshot. The PowerShell launcher remains historical evidence and is not operational in this presentation layout. Many research tests also require the original root imports.
+Root-level commands in historical notes and notebooks apply to that snapshot. The archived `run_population_continuous.ps1` launcher uses `manual_population.py` and paths relative to its original root location; use the historical checkout to run it or its `tests/test_population_continuation.py` test. It is not operational in this presentation layout. Many research tests also require the original root imports.
 
 ## Why these files are not directly runnable here
 
@@ -26,6 +26,7 @@ Do not run every historical operator or the entire research suite to launch the 
 
 ## Inventory
 
+- `run_population_continuous.ps1` — historical population-continuation launcher.
 - `manual_daymet_combined_benchmark.py`
 - `manual_daymet_qa_benchmark.py`
 - `manual_daymet_qa_experiment.py`

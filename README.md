@@ -12,7 +12,7 @@ I built an end-to-end geospatial machine-learning pipeline to answer that questi
 |---|---|
 | Study population | **151 California wildfires**, 2015–2020 |
 | Independent test cohort | **37 fires from 2020**, **30,606** evaluated 90 × 90 m patches |
-| Best patch-weighted test MAE | **0.0767 NBR**, original fitted XGBoost |
+| Best patch-weighted test MAE | **0.0767 NBR**, XGBoost (original training setup) |
 | Improvement over historical-average prediction | **51.45% lower MAE** |
 | Improvement over first-season persistence | **63.39% lower MAE** |
 
@@ -24,7 +24,7 @@ The [public Streamlit dashboard](https://after-the-fire.streamlit.app) lets visi
 
 - Select a wildfire on the California map or search by name.
 - Explore mapped landscape patches and compare predicted vegetation, observed vegetation, and prediction errors.
-- Switch between XGBoost, Random Forest, CNN and CNN + tabular fusion.
+- Switch between XGBoost, Random Forest, CNN and CNN + tabular fusion (which combines satellite imagery with environmental and landscape measurements).
 - Compare saved per-fire scores, observed-versus-predicted values and simple baselines.
 
 Every displayed observation and prediction comes from the completed evaluation. **The dashboard does not run inference or depend on the local API.** The NASA Earth Observatory hero image is illustrative; it is not a project prediction. [Data provenance](explorer/presentation/PROVENANCE.md) · [Image attribution](explorer/assets/README.md)
@@ -48,8 +48,8 @@ Two simple reference predictions (baselines) show how much the models improve on
 
 | Baseline | Test MAE | XGBoost relative MAE reduction |
 |---|---:|---:|
-| Original 2015–2017 training-target mean | 0.1580 | 51.45% |
-| First-season NBR persistence: no change through Season 5 | 0.2096 | 63.39% |
+| Historical average: mean fifth-season NBR in the original 2015–2017 training data | 0.1580 | 51.45% |
+| No change: first-season NBR carried forward unchanged to Season 5 | 0.2096 | 63.39% |
 
 Fusion's validation MAE was **0.0664**, compared with XGBoost's **0.0751**. On the later cohort, fusion's MAE increased to **0.0847**, while XGBoost achieved **0.0767**. This ranking reversal illustrates why development performance alone is insufficient evidence of future generalization. It does not establish why either model behaved differently.
 

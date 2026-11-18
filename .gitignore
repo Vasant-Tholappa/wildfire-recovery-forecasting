@@ -9,6 +9,9 @@ wheels/
 # Virtual environments
 .venv
 
+# Local editor environment-activation preference
+/.vscode/settings.json
+
 # Project-generated files
 data/
 

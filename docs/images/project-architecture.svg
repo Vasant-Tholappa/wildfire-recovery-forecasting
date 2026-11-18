@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="450" viewBox="0 0 1000 450" role="img" aria-labelledby="title desc">
+  <title id="title">From wildfire data to two separate applications</title>
+  <desc id="desc">Satellite and environmental data pass through aligned processing and quality checks, feature preparation, training, comparison and independent 2020 evaluation. Saved predictions power the public Streamlit dashboard. Separately, frozen XGBoost with fitted preprocessing powers locally verified FastAPI and Docker inference.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#b75d32"/></marker>
+  </defs>
+  <rect width="1000" height="450" rx="16" fill="#f7f5ef"/>
+  <g font-family="Arial, Helvetica, sans-serif">
+    <text x="24" y="34" font-size="16" font-weight="700" letter-spacing="2" fill="#426350">DATA → EVIDENCE → APPLICATIONS</text>
+    <g fill="#203d32">
+      <rect x="24" y="58" width="292" height="152" rx="12"/>
+      <rect x="354" y="58" width="292" height="152" rx="12"/>
+      <rect x="684" y="58" width="292" height="152" rx="12"/>
+    </g>
+    <g font-size="23" font-weight="700" fill="#fffaf0">
+      <text x="44" y="94">1. Gather source data</text>
+      <text x="374" y="94">2. Prepare reliable data</text>
+      <text x="704" y="94">3. Train and evaluate</text>
+    </g>
+    <g font-size="19" fill="#e0e8df">
+      <text x="44" y="128">Satellite imagery</text><text x="44" y="155">Environmental measurements</text><text x="44" y="182">Earth Engine extraction</text>
+      <text x="374" y="128">Processing + aligned patches</text><text x="374" y="155">Quality checks + features</text><text x="374" y="182">Parquet / BigQuery</text>
+      <text x="704" y="128">Train + compare models</text><text x="704" y="155">Separate fires by year</text><text x="704" y="182">Independent 2020 test</text>
+    </g>
+    <g fill="none" stroke="#b75d32" stroke-width="3" marker-end="url(#arrow)">
+      <path d="M 319 134 H 348"/><path d="M 649 134 H 678"/>
+      <path d="M 830 212 V 237 H 256 V 265"/>
+      <path d="M 830 237 H 744 V 265"/>
+    </g>
+    <g fill="#ffffff" stroke="#c9d3c7" stroke-width="1.5">
+      <rect x="24" y="272" width="464" height="154" rx="12"/>
+      <rect x="512" y="272" width="464" height="154" rx="12"/>
+    </g>
+    <g font-size="15" font-weight="700" letter-spacing="1" fill="#9c4b26">
+      <text x="44" y="300">OUTPUT A · PUBLIC DASHBOARD</text>
+      <text x="532" y="300">OUTPUT B · LOCAL INFERENCE</text>
+    </g>
+    <g font-size="19" fill="#345043">
+      <text x="44" y="331">Saved predictions + presentation data</text>
+      <text x="532" y="331">Frozen XGBoost + fitted preprocessing</text>
+    </g>
+    <g font-size="24" font-weight="700" fill="#203d32">
+      <text x="44" y="369">→ Streamlit</text><text x="532" y="369">→ FastAPI + Docker</text>
+    </g>
+    <g font-size="18" fill="#526257">
+      <text x="44" y="402">Publicly deployed · displays saved results</text>
+      <text x="532" y="402">Verified locally only · no cloud API</text>
+    </g>
+  </g>
+</svg>

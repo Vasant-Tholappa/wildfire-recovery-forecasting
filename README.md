@@ -2,7 +2,7 @@
 
 **Can measurements from the first growing season help forecast vegetation conditions in the fifth?**
 
-I built an end-to-end geospatial machine-learning pipeline to answer that question across California wildfires. It combines satellite imagery and environmental measurements, compares tree-based and neural models, and tests forecasts on an unseen-year cohort. The unexpected result: **deep learning led during validation, but XGBoost generalized better on the independent 2020 test set.**
+I built an end-to-end geospatial machine-learning pipeline to answer that question across California wildfires. It combines satellite imagery and environmental measurements, compares tree-based and neural models, and tests forecasts on wildfires from a later year not used to develop the models. The unexpected result: **deep learning led during validation, but XGBoost generalized better on the independent 2020 test set.**
 
 **[Explore the Live Dashboard](https://after-the-fire.streamlit.app)** · [Results](#independent-test-results) · [Implementation](#implementation-and-repository-guide) · [Run locally](#run-the-dashboard-locally)
 
@@ -16,14 +16,14 @@ I built an end-to-end geospatial machine-learning pipeline to answer that questi
 | Improvement over historical-average prediction | **51.45% lower MAE** |
 | Improvement over first-season persistence | **63.39% lower MAE** |
 
-These percentages are **relative reductions in mean absolute prediction error**, not prediction accuracy or percentage vegetation recovery. Fifth-season Normalized Burn Ratio (NBR) is a satellite-derived vegetation-condition indicator.
+Each landscape patch is a 90 × 90 m area being studied. MAE measures average absolute prediction error; lower is better. These percentages are **relative reductions in mean absolute prediction error**, not prediction accuracy or percentage vegetation recovery. Fifth-season Normalized Burn Ratio (NBR) is a satellite-derived indicator of vegetation condition, not a percentage of ecological recovery.
 
 ## Explore the results
 
 The [public Streamlit dashboard](https://after-the-fire.streamlit.app) lets visitors:
 
 - Select a wildfire on the California map or search by name.
-- Inspect correctly located patches showing predicted vegetation, observed vegetation or prediction error.
+- Explore mapped landscape patches and compare predicted vegetation, observed vegetation, and prediction errors.
 - Switch between XGBoost, Random Forest, CNN and CNN + tabular fusion.
 - Compare saved per-fire scores, observed-versus-predicted values and simple baselines.
 
@@ -31,7 +31,7 @@ Every displayed observation and prediction comes from the completed evaluation. 
 
 ## Independent test results
 
-For the original fitted models, I trained on **2015–2017**, selected configurations using **2018–2019**, and reserved **2020** for independent evaluation. Entire fires stay within one split. Inputs stop at the end of the first complete post-fire growing season; the target is fifth-season NBR.
+For the original fitted models, I trained on **2015–2017** fires and used **2018–2019** validation data to develop and compare models. Fires from **2020** were held out for the independent test. Entire fires stay within one split. Inputs stop at the end of the first complete post-fire growing season; the target is fifth-season NBR.
 
 All four models below were evaluated on the **same ordered 30,606 test patches across 37 fires**. These are the four models displayed in the dashboard, with saved metrics rounded to four decimals.
 
@@ -44,7 +44,7 @@ All four models below were evaluated on the **same ordered 30,606 test patches a
 
 MAE measures average absolute error in NBR units; RMSE penalizes large residuals more strongly. R² compares squared errors with a constant test-cohort-mean reference. Equal-fire MAE gives each fire equal weight instead of weighting by its patch count.
 
-Two fixed benchmarks establish predictive skill:
+Two simple reference predictions (baselines) show how much the models improve on predicting the historical training average or assuming no change after Season 1:
 
 | Baseline | Test MAE | XGBoost relative MAE reduction |
 |---|---:|---:|
@@ -57,16 +57,7 @@ The scientific experiment archive retains **eight fitted model records across tw
 
 ## From source data to a usable application
 
-```mermaid
-flowchart LR
-    A["Earth Engine<br/>Imagery + environment"] --> B["Exports + processing<br/>Parquet / BigQuery / QA"]
-    B --> C["Frozen splits<br/>Tree + neural models"]
-    C --> D["Independent<br/>2020 evaluation"]
-    D --> E["Saved predictions"]
-    E --> F["Streamlit<br/>Public dashboard"]
-    D --> G["Frozen XGBoost<br/>Fitted preprocessing"]
-    G --> H["FastAPI + Docker<br/>Locally verified"]
-```
+![Wildfire data processing and independent model evaluation lead to separate public Streamlit results and locally verified FastAPI/Docker inference](docs/images/project-architecture.svg)
 
 Landsat, MTBS, LANDFIRE, terrain, Daymet and LCMS supplied imagery, environmental measurements and quality checks. Shared geographic grids, validity masks and unique patch keys kept imagery, tabular features and targets aligned. Regional rasters were cropped locally into two-channel 15 × 15 chips; the central 3 × 3 pixels represent each 90 m prediction patch. Missing-pixel preprocessing was fitted on training data only.
 
@@ -94,7 +85,9 @@ From the repository root, use Python 3.12 and an isolated presentation environme
 ```powershell
 py -3.12 -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r explorer/requirements.txt
-.\.venv\Scripts\python.exe -m streamlit run explorer/streamlit_app.py --server.address 127.0.0.1 --server.port 8501
+.\.venv\Scripts\python.exe -m streamlit run explorer/streamlit_app.py `
+  --server.address 127.0.0.1 `
+  --server.port 8501
 ```
 
 If the project's `.venv` already exists, skip its creation. Open `http://127.0.0.1:8501`; stop with Ctrl+C. No credentials, private weights or research database are required. Public basemaps need internet access. Do not install the full research environment merely to explore the dashboard.

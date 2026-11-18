@@ -1,10 +1,10 @@
 [project]
 name = "wildfire-recovery-forecasting"
 version = "0.1.0"
-description = "Predicting fifth-season post-fire Landsat NBR across the Western U.S."
+description = "Predicting fifth-season post-fire Landsat NBR across California."
 readme = "README.md"
 authors = [
-    { name = "vasant", email = "vasant.tholappa@gmail.com" }
+    { name = "vasant" }
 ]
 requires-python = ">=3.12"
 dependencies = [

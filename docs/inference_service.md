@@ -1,6 +1,6 @@
 # Local FastAPI and Docker inference
 
-FastAPI serves one prepared patch record using the frozen **Option A original no-climate XGBoost** pipeline. Docker packages the application and its serving environment; it is not a cloud-hosting platform. This is local inference, not satellite retrieval, retraining or evaluation. No Streamlit application is included.
+FastAPI serves one prepared patch record using the frozen **Option A original no-climate XGBoost** pipeline. Docker packages the application and its serving environment; it is not a cloud-hosting platform. This is local inference, not satellite retrieval, retraining or evaluation. The separately deployed [Streamlit dashboard](https://after-the-fire.streamlit.app) displays saved results and does not call this API. This service is locally verified only; cloud-hosted inference is not implemented or planned for this release.
 
 ## Model and input contract
 

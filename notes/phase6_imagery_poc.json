@@ -4,11 +4,11 @@
   "proposed_tasks": 4,
   "selection_reason": "Input-only small pair: 2017 late-ignition training fire and 2018 validation fire; 104 versus 215 eligible patches. No targets or model results used.",
   "source_hashes": {
-    "C:\\F copy\\wildfire-recovery-forecasting\\data\\processed\\phase3_ca175_tile1_v1.parquet": "a81477f0bcbfb44896f91b2756066a8b4a1a9e918d86a7d25cbd2c11c0382c14",
-    "C:\\F copy\\wildfire-recovery-forecasting\\data\\processed\\phase3_ca175_tile1_v1_batches.parquet": "221844d4cbaf199f1a3dba9f666edc748b42ac587fe0c2bfef91a91a7fb79355",
-    "C:\\F copy\\wildfire-recovery-forecasting\\data\\processed\\phase3_ca175_tile1_v1.json": "66f507b3de85d38214a9fce34d9c434072c384409c7e8540fc518c71010cac0d"
+    "data/processed/phase3_ca175_tile1_v1.parquet": "a81477f0bcbfb44896f91b2756066a8b4a1a9e918d86a7d25cbd2c11c0382c14",
+    "data/processed/phase3_ca175_tile1_v1_batches.parquet": "221844d4cbaf199f1a3dba9f666edc748b42ac587fe0c2bfef91a91a7fb79355",
+    "data/processed/phase3_ca175_tile1_v1.json": "66f507b3de85d38214a9fce34d9c434072c384409c7e8540fc518c71010cac0d"
   },
-  "eligible_file": "C:\\F copy\\wildfire-recovery-forecasting\\data\\processed\\patch_model_eligible_terrain_v2.parquet",
+  "eligible_file": "data/processed/patch_model_eligible_terrain_v2.parquet",
   "candidates": [
     {
       "fire_id": "CA3839112224120171009",

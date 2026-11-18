@@ -1,6 +1,6 @@
 # After the Fire — public presentation app
 
-Single-page Streamlit explorer, independent of FastAPI, Docker, model weights and private research files. All values are precomputed. **Prepared for review; not published or deployed.**
+Single-page Streamlit explorer, independent of FastAPI, Docker, model weights and private research files. All values are precomputed. **Publicly deployed:** [after-the-fire.streamlit.app](https://after-the-fire.streamlit.app).
 
 ## Run locally (PowerShell, repository root)
 
@@ -10,7 +10,7 @@ Single-page Streamlit explorer, independent of FastAPI, Docker, model weights an
 
 Open `http://127.0.0.1:8501`. Stop with Ctrl+C. The implementation environment had Plotly/pandas/numpy already; six missing Streamlit-related packages were installed without upgrading existing packages. On a fresh presentation-only environment, install `explorer/requirements.txt` (Python 3.12). Do not sync the full research stack merely to run this dashboard.
 
-Local review: inspect the hero at desktop and mobile widths; click a statewide fire marker and verify the selector/details change; use the accessible selector; change model and map layer; confirm scatter plots update; inspect the four-model performance expander and source notes. Marker selection is wired through Streamlit's supported PyDeck callback, with a stable layer ID. Automated tests exercise its event-handling helper and other widgets, but cannot substitute for actual browser/WebGL click testing. No screenshot or visual rendering review was performed during implementation.
+Local review: inspect the hero at desktop and mobile widths; click a statewide fire marker and verify the selector/details change; use the accessible selector; change model and map layer; confirm scatter plots update; inspect the four-model performance expander and source notes. Marker selection is wired through Streamlit's supported PyDeck callback, with a stable layer ID. Automated tests exercise its event-handling helper and other widgets, but cannot substitute for actual browser/WebGL click testing. The maintainer completed local and hosted browser acceptance testing; automated checks are not a substitute for browser interaction checks after future changes.
 
 ## What visitors see
 
@@ -23,9 +23,9 @@ Saved scientific experiments retain eight model records across two training stra
 
 This is **Option C**: named fire geography and canonical patch geometry were already available. Full MTBS perimeters are not shipped. Statewide markers are interior representative points computed in EPSG:5070 from saved MTBS geometry and transformed to EPSG:4326, not ignition points. Every 90 m patch corner comes from the existing zero-anchored EPSG:5070 grid. No population reconstruction or satellite extraction occurred. Patch coverage is one selected tile per fire, not whole-fire coverage.
 
-## Deploy later to Streamlit Community Cloud
+## Streamlit Community Cloud configuration
 
-After local review and separately authorized publication:
+The deployed application uses the following configuration; these notes also support reproducing the setup:
 
 1. Publish only reviewed app code and `presentation/` assets with their provenance. Keep research datasets, models, notes and databases excluded.
 2. In Community Cloud, select the approved GitHub repository/branch and **`explorer/streamlit_app.py`** as the entrypoint; choose Python **3.12**.
@@ -34,7 +34,7 @@ After local review and separately authorized publication:
 
 The root `.streamlit/config.toml` supplies the dark theme and disables Streamlit usage statistics. Core code/data can also run from a copy of the `explorer` directory alone; copy the theme configuration if desired. Basemap display requires public CARTO/OpenStreetMap tile access and browser WebGL. No Earth Engine, GCS, BigQuery or restricted APIs are used. Public basemap requests can expose ordinary browser/network metadata to their providers. If tiles are blocked, selectors, charts and tabular results remain available, but geographic background display will be degraded.
 
-Free hosting may sleep/restart, has limited resources and requires checking current Python/package support. The application caches a ~3 MB presentation bundle and renders only the selected fire's polygons (largest observed fire view 4,116 patches), not all statewide patch polygons simultaneously. Hosted dependency installation has not yet been tested. No account sign-in, push or deployment was performed.
+Free hosting may sleep/restart, has limited resources and requires checking current Python/package support. The application caches a ~3 MB presentation bundle and renders only the selected fire's polygons (largest observed fire view 4,116 patches), not all statewide patch polygons simultaneously. The maintainer verified the hosted application. The separate FastAPI/Docker inference service remains locally verified only; cloud inference is not planned for this release.
 
 References: [Streamlit dependency precedence](https://docs.streamlit.io/deploy/streamlit-community-cloud/deploy-your-app/app-dependencies), [PyDeck selection API](https://docs.streamlit.io/develop/api-reference/charts/st.pydeck_chart).
 
@@ -52,4 +52,6 @@ The focused tests check bundle hashes/counts/coordinates, all-fire/model views, 
 
 The map keeps a stable pickable fire layer and a separate non-pickable mint highlight; only a single valid fire event changes the shared dropdown state. Empty, ambiguous, unknown and overlay events retain the current choice. This removes a rerun instability risk; it does not establish the cause of every missed click. Overlapping markers can still require zooming or the searchable dropdown. Automated event checks do not replace a browser click test.
 
-Manually review desktop/mobile layout, map selection and dropdown synchronization, all three map views, equal-axis scatterplots, and attribution before approving publication. The responsive hero adapts its text and satellite image to narrow screens; Streamlit columns stack on narrow layouts. No new hosting or scientific dependencies were added. The app remains independent of the private inputs used only by the offline packager.
+Manually review desktop/mobile layout, map selection and dropdown synchronization, all three map views, equal-axis scatterplots, and attribution after any future presentation change. The responsive hero adapts its text and satellite image to narrow screens; Streamlit columns stack on narrow layouts. No new hosting or scientific dependencies were added. The app remains independent of the private inputs used only by the offline packager.
+
+Research operators are archived under [`scripts/research_operators/`](../scripts/research_operators/README.md). They are not app dependencies; historical research commands and tests require the preserved original layout.

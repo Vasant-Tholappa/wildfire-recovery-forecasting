@@ -109,3 +109,7 @@ policy, cross-fire/cross-split context overlap, current quota/budget and a bound
 operating plan using the existing frozen population. Preserve common evaluation
 keys for classical/CNN comparisons. Do not add sources, access test outcomes or
 start population exports as part of this checkpoint.
+
+## Public archive portability note
+
+In the presentation branch, `phase6_imagery_poc.json` uses repository-relative source-path labels instead of machine-specific checkout prefixes. Source-file digest values and scientific fields are unchanged. This is a sanitized presentation of provenance, not a claim that the JSON file itself has its original byte hash. The original file and runnable layout remain in commit `cbd13f167393098e4a7735ecb2e5fdcef4d1a199` (designated `research-v1-working` snapshot). Historical operator commands in this note apply to that original layout.

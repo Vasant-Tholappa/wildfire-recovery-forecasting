@@ -26,3 +26,21 @@ mlruns/
 mlflow.db*
 
 mlartifacts/
+
+# Private research notes and local agent instructions (portable across clones)
+docs/*_technical_notes.md
+/AGENTS.md
+/docs/phase6_implementation_plan.md
+/docs/phase7_execution_plan.md
+/docs/phase7_error_analysis.md
+/docs/phase7_modeling_consolidation.md
+
+# Local credentials, model weights and experiment databases
+.env.*
+!.env.example
+.streamlit/secrets.toml
+*.pkl
+*.pt
+*.pth
+*.sqlite
+*.sqlite-*
